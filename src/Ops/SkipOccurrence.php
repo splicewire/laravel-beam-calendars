@@ -4,6 +4,7 @@ namespace Splicewire\Beam\Calendars\Ops;
 
 use Illuminate\Http\Request;
 use Splicewire\Beam\Calendars\Data\CalendarSeriesData;
+use Splicewire\Beam\Calendars\Data\SkipInputData;
 use Splicewire\Beam\Calendars\Models\Calendar;
 use Splicewire\Beam\Calendars\Ops\Concerns\ResolvesOccurrences;
 use Splicewire\Beam\Particle\Attributes\ParticleOp;
@@ -28,6 +29,7 @@ use Splicewire\Beam\Particle\OperationKind;
     kind: OperationKind::Write,
     model: Calendar::class,
     ability: 'update',
+    input: SkipInputData::class,
     output: CalendarSeriesData::class,
 )]
 class SkipOccurrence

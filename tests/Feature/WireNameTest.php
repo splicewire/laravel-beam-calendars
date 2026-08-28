@@ -4,7 +4,9 @@ use Spatie\LaravelData\Mappers\CamelCaseMapper;
 use Spatie\LaravelData\Support\DataConfig;
 use Splicewire\Beam\Calendars\Data\CalendarEventInputData;
 use Splicewire\Beam\Calendars\Data\CalendarSeriesInputData;
+use Splicewire\Beam\Calendars\Data\MaterializeInputData;
 use Splicewire\Beam\Calendars\Data\ProjectedEventData;
+use Splicewire\Beam\Calendars\Data\SkipInputData;
 
 /**
  * The package's WIRE CONTRACT, pinned.
@@ -89,4 +91,17 @@ it('round-trips a snake_case payload through a write DTO', function () {
         'series_id' => 's-1',
         'recurrence_id' => '2026-01-05',
     ]);
+});
+
+/**
+ * The OPERATION input DTOs are on the same contract as the resource write DTOs — added when
+ * api-surface-coherence 121 gave `materialize`/`skip` an explicit `input:`. They are the shapes
+ * whose keys the handlers' own `$request->validate()` calls already spell in snake_case, so an
+ * undeclared camel mapping here would 422 every request the op has ever accepted.
+ */
+it('publishes snake_case keys for the occurrence operation inputs', function () {
+    expect(wireIn(MaterializeInputData::class, 'seriesId'))->toBe('series_id')
+        ->and(wireIn(MaterializeInputData::class, 'recurrenceId'))->toBe('recurrence_id')
+        ->and(wireIn(SkipInputData::class, 'seriesId'))->toBe('series_id')
+        ->and(wireIn(SkipInputData::class, 'recurrenceId'))->toBe('recurrence_id');
 });

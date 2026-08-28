@@ -3,6 +3,7 @@
 namespace Splicewire\Beam\Calendars\Ops;
 
 use Illuminate\Http\Request;
+use Splicewire\Beam\Calendars\Data\SweepInputData;
 use Splicewire\Beam\Calendars\Data\SweepResultData;
 use Splicewire\Beam\Calendars\Jobs\SweepCalendarJob;
 use Splicewire\Beam\Calendars\Models\Calendar;
@@ -29,6 +30,7 @@ use Splicewire\Beam\Particle\OperationKind;
     kind: OperationKind::Task,
     model: Calendar::class,
     ability: 'update',
+    input: SweepInputData::class,
     output: SweepResultData::class,
 )]
 class SweepCalendar

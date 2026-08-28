@@ -5,6 +5,7 @@ namespace Splicewire\Beam\Calendars\Ops;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Splicewire\Beam\Calendars\Data\CalendarEventData;
+use Splicewire\Beam\Calendars\Data\MaterializeInputData;
 use Splicewire\Beam\Calendars\Models\Calendar;
 use Splicewire\Beam\Calendars\Models\CalendarEvent;
 use Splicewire\Beam\Calendars\Ops\Concerns\ResolvesOccurrences;
@@ -29,6 +30,7 @@ use Splicewire\Beam\Particle\OperationKind;
     kind: OperationKind::Write,
     model: Calendar::class,
     ability: 'update',
+    input: MaterializeInputData::class,
     output: CalendarEventData::class,
 )]
 class MaterializeOccurrence

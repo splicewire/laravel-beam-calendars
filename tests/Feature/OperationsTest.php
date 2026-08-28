@@ -150,3 +150,39 @@ it('can still PIN an instance that has already been skipped — an override is n
 
     expect($out->recurrenceId)->toBe('2026-01-06')->and($out->title)->toBe('Restored');
 });
+
+// ── the declared `input:` axis (api-surface-coherence 121) ───────────────────────────────────
+
+/**
+ * ⚠️ These are the tests that make declaring `input:` safe rather than merely tidy.
+ *
+ * `ParticleOperationController::validateInput()` runs `$input::validate($request->all())` BEFORE the
+ * handler, so a declared DTO that disagrees with the handler's own `$request->validate()` turns
+ * every request the op has ever accepted into a 422 — and the handler tests above would not notice,
+ * because they call `handle()` directly and never pass through the controller. What is pinned here
+ * is the AGREEMENT between the two: the payloads the handler tests send must survive the gate.
+ */
+it('validates, under the declared input DTO, the exact payloads the handlers accept', function () {
+    config(['data.name_mapping_strategy.input' => Spatie\LaravelData\Mappers\CamelCaseMapper::class]);
+
+    $ref = ['series_id' => (string) $this->series->getKey(), 'recurrence_id' => '2026-01-06'];
+
+    Splicewire\Beam\Calendars\Data\MaterializeInputData::validate($ref + ['title' => 'Pinned']);
+    Splicewire\Beam\Calendars\Data\MaterializeInputData::validate($ref + ['anchor' => '2026-02-01']);
+    Splicewire\Beam\Calendars\Data\MaterializeInputData::validate($ref);
+    Splicewire\Beam\Calendars\Data\SkipInputData::validate($ref);
+    // A sweep with no `at` is the common case — "fire what is due now" — so the declaration must
+    // not make the single field required.
+    Splicewire\Beam\Calendars\Data\SweepInputData::validate([]);
+    Splicewire\Beam\Calendars\Data\SweepInputData::validate(['at' => '2026-01-06']);
+
+    expect(true)->toBeTrue();
+});
+
+it('REFUSES an occurrence operation missing its recurrence coordinate', function () {
+    config(['data.name_mapping_strategy.input' => Spatie\LaravelData\Mappers\CamelCaseMapper::class]);
+
+    expect(fn () => Splicewire\Beam\Calendars\Data\SkipInputData::validate([
+        'series_id' => (string) $this->series->getKey(),
+    ]))->toThrow(ValidationException::class);
+});
