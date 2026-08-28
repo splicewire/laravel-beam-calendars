@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Gate;
 use Rushing\DataFilters\Attributes\Filterable;
 use Rushing\DataFilters\Attributes\Sortable;
 use Spatie\LaravelData\Attributes\MapName;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Calendars\Models\Calendar;
 use Splicewire\Beam\Calendars\Models\CalendarEvent;
 use Splicewire\Beam\Data\BeamData;
@@ -46,6 +47,7 @@ use Splicewire\Beam\Particle\Attributes\ParticleResource;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
+#[TypeScript]
 class CalendarEventData extends BeamData
 {
     public function __construct(

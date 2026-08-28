@@ -5,6 +5,7 @@ namespace Splicewire\Beam\Calendars\Data;
 use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Example;
 use Spatie\LaravelData\Attributes\MapName;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Calendars\Projection\ProjectedEvent;
 use Splicewire\Beam\Data\BeamData;
 
@@ -16,12 +17,17 @@ use Splicewire\Beam\Data\BeamData;
  * this with zero casing translation. This is the DTO the packaged calendar UI adapts into its own
  * event shape.
  *
- * ⚠️ No `#[TypeScript]` here, and adding one would not do what it looks like it does. The
+ * ⚠️ It carries `#[TypeScript]`, and that reverses an earlier call in this package. The original
+ * reasoning was "codegen is a host concern, so the package forces no transformer dependency on
+ * every consumer" — correct for `beam-rank`, whose DTOs no packaged TS surface consumes. It is wrong
+ * here, because one does: a host mounting the standalone calendar needs this type, and cannot
+ * generate it without the attribute.
+ *
+ * ⚠️ **The attribute alone is not sufficient**, which is the half that makes this look broken. The
  * transformer's `auto_discover_types` is rooted at the HOST's `app_path()`, so a package's Data
- * classes are invisible to a host-rooted scan whatever attributes they carry — a host that wants
- * these in its generated types names this package's path in its own codegen pipeline config.
- * Codegen is a host concern, and pretending otherwise here produces a DTO that "doesn't generate"
- * for reasons nobody can find.
+ * classes are invisible to a host-rooted scan whatever attributes they carry. A host must ALSO name
+ * this package's `src/Data` in its own transformer config. That pairing is the single most likely
+ * cause of "the DTO doesn't generate".
  */
 #[Description('One dated calendar entry: a stored event or a series\' virtual occurrence, with its write-target identity.')]
 /**
@@ -34,6 +40,7 @@ use Splicewire\Beam\Data\BeamData;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
+#[TypeScript]
 class ProjectedEventData extends BeamData
 {
     public function __construct(
