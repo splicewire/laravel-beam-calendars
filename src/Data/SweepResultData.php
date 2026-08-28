@@ -3,7 +3,7 @@
 namespace Splicewire\Beam\Calendars\Data;
 
 use Spatie\LaravelData\Attributes\MapName;
-use Splicewire\Beam\Data\Data;
+use Splicewire\Beam\Data\BeamData;
 
 /**
  * What a sweep did. Returned by the sweep operation's `respond()` — see
@@ -20,7 +20,7 @@ use Splicewire\Beam\Data\Data;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
-class SweepResultData extends Data
+class SweepResultData extends BeamData
 {
     /**
      * @param  list<string>  $fired  `series_id|recurrence_id` keys

@@ -4,7 +4,7 @@ namespace Splicewire\Beam\Calendars\Data;
 
 use Spatie\LaravelData\Optional;
 use Splicewire\Beam\Calendars\Projection\Horizon;
-use Splicewire\Beam\Data\Data;
+use Splicewire\Beam\Data\BeamData;
 
 /**
  * The window a read operation asks for. Both ends optional — an absent pair means the configured
@@ -20,7 +20,7 @@ use Splicewire\Beam\Data\Data;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
-class HorizonInputData extends Data
+class HorizonInputData extends BeamData
 {
     public function __construct(
         public string|Optional $from = new Optional,

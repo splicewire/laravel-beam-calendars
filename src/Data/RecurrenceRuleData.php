@@ -7,7 +7,7 @@ use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Title;
 use Spatie\LaravelData\Optional;
 use Splicewire\Beam\Calendars\Enums\RecurrenceFrequency;
-use Splicewire\Beam\Data\Data;
+use Splicewire\Beam\Data\BeamData;
 
 /**
  * A typed recurrence rule — the *truth* a {@see SeriesData} carries.
@@ -49,7 +49,7 @@ use Splicewire\Beam\Data\Data;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
-class RecurrenceRuleData extends Data
+class RecurrenceRuleData extends BeamData
 {
     /**
      * @param  list<string>|Optional  $byday

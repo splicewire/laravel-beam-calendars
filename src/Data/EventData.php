@@ -5,7 +5,7 @@ namespace Splicewire\Beam\Calendars\Data;
 use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Title;
 use Schemastud\DataSchemas\Contracts\SchemaIdentity;
-use Splicewire\Beam\Data\Data;
+use Splicewire\Beam\Data\BeamData;
 
 /**
  * The plain dated event — the generic kind, and the one a host reaches for when it wants a
@@ -25,7 +25,7 @@ use Splicewire\Beam\Data\Data;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
-class EventData extends Data implements SchemaIdentity
+class EventData extends BeamData implements SchemaIdentity
 {
     public function __construct(
         public string $kind,

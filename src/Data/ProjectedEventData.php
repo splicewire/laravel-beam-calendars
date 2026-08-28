@@ -6,7 +6,7 @@ use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Example;
 use Spatie\LaravelData\Attributes\MapName;
 use Splicewire\Beam\Calendars\Projection\ProjectedEvent;
-use Splicewire\Beam\Data\Data;
+use Splicewire\Beam\Data\BeamData;
 
 /**
  * The wire shape of one projected calendar entry — a stored row, or a virtual instance a series
@@ -34,7 +34,7 @@ use Splicewire\Beam\Data\Data;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
-class ProjectedEventData extends Data
+class ProjectedEventData extends BeamData
 {
     public function __construct(
         #[Description('The stored row id, or null for a virtual occurrence — there is no write target until it is materialized.')]

@@ -7,7 +7,7 @@ use Schemastud\DataSchemas\Attributes\Title;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Optional;
 use Splicewire\Beam\Calendars\Enums\SpawnMode;
-use Splicewire\Beam\Data\Data;
+use Splicewire\Beam\Data\BeamData;
 
 /**
  * What one firing of a {@see SeriesData} produces — a discriminated template. `mode` selects the
@@ -36,7 +36,7 @@ use Splicewire\Beam\Data\Data;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
-class SpawnData extends Data
+class SpawnData extends BeamData
 {
     public function __construct(
         #[Title('Mode')]

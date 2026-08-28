@@ -7,7 +7,7 @@ use Rushing\Popcorn\Registries\IsRegistry;
 use Rushing\Popcorn\Registries\OnDuplicate;
 use Rushing\Popcorn\Registries\Optionality;
 use Rushing\Popcorn\Registries\RegistryArity;
-use Splicewire\Beam\Data\Data;
+use Splicewire\Beam\Data\BeamData;
 
 /**
  * The registry of calendar EVENT KINDS — the vocabulary of what can sit on a date, and the typed
@@ -41,7 +41,7 @@ use Splicewire\Beam\Data\Data;
     root: 'beam.calendars.event_kinds',
     of: 'calendar event kinds — the dotted kind key and the typed payload class each resolves to',
     arity: RegistryArity::PickOne,
-    entryType: 'class-string<'.Data::class.'>',
+    entryType: 'class-string<'.BeamData::class.'>',
     onDuplicate: OnDuplicate::Supersede,
     optionality: Optionality::Optional,
     note: 'Keys are the dotted kind verbatim (`kind.event`, `kind.run-circuit`). A registry MISS is '

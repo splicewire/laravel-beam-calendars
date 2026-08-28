@@ -3,7 +3,7 @@
 namespace Splicewire\Beam\Calendars\Data;
 
 use Spatie\LaravelData\Optional;
-use Splicewire\Beam\Data\Data;
+use Splicewire\Beam\Data\BeamData;
 use Splicewire\Beam\Write\Contracts\MapsToModelAttributes;
 
 /**
@@ -30,7 +30,7 @@ use Splicewire\Beam\Write\Contracts\MapsToModelAttributes;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
-class CalendarInputData extends Data implements MapsToModelAttributes
+class CalendarInputData extends BeamData implements MapsToModelAttributes
 {
     public function __construct(
         public string|Optional $title = new Optional,

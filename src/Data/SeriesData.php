@@ -6,7 +6,7 @@ use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Title;
 use Schemastud\DataSchemas\Contracts\SchemaIdentity;
 use Spatie\LaravelData\Optional;
-use Splicewire\Beam\Data\Data;
+use Splicewire\Beam\Data\BeamData;
 
 /**
  * The typed payload for a recurring series — a single schedulable, side-effecting declaration that
@@ -40,7 +40,7 @@ use Splicewire\Beam\Data\Data;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
-class SeriesData extends Data implements SchemaIdentity
+class SeriesData extends BeamData implements SchemaIdentity
 {
     /**
      * @param  list<array<string, mixed>>|Optional  $overrides

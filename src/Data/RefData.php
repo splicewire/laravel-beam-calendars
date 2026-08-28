@@ -6,7 +6,7 @@ use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Title;
 use Schemastud\DataSchemas\Contracts\SchemaIdentity;
 use Spatie\LaravelData\Attributes\MapName;
-use Splicewire\Beam\Data\Data;
+use Splicewire\Beam\Data\BeamData;
 
 /**
  * A scheduled REFERENCE to something this package does not own.
@@ -32,7 +32,7 @@ use Splicewire\Beam\Data\Data;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
-class RefData extends Data implements SchemaIdentity
+class RefData extends BeamData implements SchemaIdentity
 {
     public function __construct(
         public string $kind,

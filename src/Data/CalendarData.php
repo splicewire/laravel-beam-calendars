@@ -9,7 +9,7 @@ use Rushing\DataFilters\Attributes\Filterable;
 use Rushing\DataFilters\Attributes\Sortable;
 use Spatie\LaravelData\Attributes\MapName;
 use Splicewire\Beam\Calendars\Models\Calendar;
-use Splicewire\Beam\Data\Data;
+use Splicewire\Beam\Data\BeamData;
 use Splicewire\Beam\Particle\Attributes\ParticleResource;
 
 /**
@@ -53,7 +53,7 @@ use Splicewire\Beam\Particle\Attributes\ParticleResource;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
-class CalendarData extends Data
+class CalendarData extends BeamData
 {
     public function __construct(
         public string $id,

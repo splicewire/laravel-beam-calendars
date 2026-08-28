@@ -6,7 +6,7 @@ use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Title;
 use Schemastud\DataSchemas\Contracts\SchemaIdentity;
 use Spatie\LaravelData\Attributes\MapName;
-use Splicewire\Beam\Data\Data;
+use Splicewire\Beam\Data\BeamData;
 
 /**
  * A scheduled operation that RETIRES a target on a date — the calendar's one built-in
@@ -28,7 +28,7 @@ use Splicewire\Beam\Data\Data;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
-class DecommissionData extends Data implements SchemaIdentity
+class DecommissionData extends BeamData implements SchemaIdentity
 {
     public function __construct(
         public string $kind,
