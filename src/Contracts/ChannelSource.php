@@ -29,4 +29,19 @@ interface ChannelSource
      * calendar carrying a channel a host has since removed should still render, with the raw id.
      */
     public function label(string $id): ?string;
+
+    /**
+     * The lane's full declared metadata, or `[]` for an unknown lane.
+     *
+     * This exists because a host's channel vocabulary carries more than a label — ordering, a
+     * colour, whatever a surface needs to render a lane header — and a port that exposed only the
+     * label would force every consumer that wants the rest to go back to reading the host's storage
+     * directly. That is precisely the second reader this port exists to prevent.
+     *
+     * The package itself reads nothing out of this beyond `label`; it is a pass-through so a
+     * consumer can ask ONE thing for everything a lane declares.
+     *
+     * @return array<string, mixed>
+     */
+    public function meta(string $id): array;
 }

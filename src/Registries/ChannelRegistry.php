@@ -51,9 +51,17 @@ class ChannelRegistry extends ConfigRegistry implements ChannelSource
 
     public function label(string $id): ?string
     {
+        // A lane a host has since removed still renders, with its raw id — see ChannelSource.
+        return $this->meta($id)['label'] ?? null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function meta(string $id): array
+    {
         $entry = $this->tryResolve($id);
 
-        // A lane a host has since removed still renders, with its raw id — see ChannelSource.
-        return is_array($entry) ? ($entry['label'] ?? null) : null;
+        return is_array($entry) ? $entry : [];
     }
 }
