@@ -10,6 +10,7 @@ use Rushing\Popcorn\Laravel\PopcornServiceProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
 use Spatie\LaravelData\Mappers\CamelCaseMapper;
 use Spatie\Permission\PermissionServiceProvider;
+use Splicewire\Beam\BeamServiceProvider;
 use Splicewire\Beam\Calendars\BeamCalendarsServiceProvider;
 use Splicewire\Beam\Calendars\Tests\Fixtures\User;
 
@@ -36,6 +37,13 @@ abstract class TestCase extends Orchestra
             // NULL inside the suite — every hydration then fatals with an array-offset-on-null
             // before any assertion can run. A FATAL, not a failure, which is why it is worth naming.
             LaravelDataServiceProvider::class,
+
+            // ⚠️ The FIFTH instance of the trap tower's TestCase documents four times: testbench does
+            // not auto-discover. Without beam's own provider, ParticleResourceRegistry is not bound as
+            // a singleton, so every app() call mints a fresh one and a registration lands in a
+            // throwaway — the registry reads back EMPTY and the failure looks like discovery not
+            // working. It is the binding, not the discovery.
+            BeamServiceProvider::class,
 
             BeamCalendarsServiceProvider::class,
         ];

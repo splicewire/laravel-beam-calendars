@@ -28,20 +28,54 @@ use Splicewire\Beam\Particle\ParticleOperationRegistry;
  */
 class Resources
 {
-    public static function register(array $opts = []): void
+    /**
+     * DECLARE the three resources into the registries.
+     *
+     * ⚠️ **Separate from {@see register()}, and that separation is the whole point.** Declaration is a
+     * fact about this package — it declares three resources whether or not anything routes them.
+     * Mounting is a fact about the process — it needs beam's route macros.
+     *
+     * They used to be one method behind one guard, and the guard was `Route::hasMacro()`. Measured at
+     * `~/Herd/splicewire-app` on 2026-08-28: that macro is **false in console context**, so the host
+     * had 41 registered particle resources and **none of them were this package's**. Nothing reported
+     * it, and downstream the codegen manifest never saw them either — which presented as
+     * `typescript:transform` emitting zero types and looked for hours like a codegen bug.
+     *
+     * Beam hit the same thing and says so at `BeamServiceProvider:1710`: the estate-wide
+     * `discover_paths` points at the HOST's `app_path('Data')`, which a package class can never be
+     * inside, so a package must declare its own classes explicitly.
+     *
+     * Idempotent — registration is keyed, so declaring twice registers the same three.
+     */
+    public static function declare(): void
     {
-        if (! class_exists(ParticleOperationRegistry::class) || ! Route::hasMacro('particleResource')) {
-            return; // beam particle infra absent — nothing to mount.
+        if (! class_exists(ParticleOperationRegistry::class)) {
+            return; // beam particle infra genuinely absent (a headless install).
         }
-
-        $groupPrefix = $opts['group_prefix'] ?? config('beam.calendars.resources.group_prefix', 'resources');
-        $middleware = $opts['middleware'] ?? config('beam.calendars.resources.middleware', ['web', 'auth']);
 
         app(AttributedParticleDiscovery::class)->discover([
             CalendarData::class,
             CalendarEventData::class,
             CalendarSeriesData::class,
         ]);
+    }
+
+    /**
+     * MOUNT the declared surface onto HTTP.
+     *
+     * This one may legitimately no-op: mounting needs beam's route macros, and a headless environment
+     * or the package's own suite has none. What must NOT no-op with it is {@see declare()}.
+     */
+    public static function register(array $opts = []): void
+    {
+        self::declare();
+
+        if (! class_exists(ParticleOperationRegistry::class) || ! Route::hasMacro('particleResource')) {
+            return; // no router macros — declared but not mounted, which is a valid state.
+        }
+
+        $groupPrefix = $opts['group_prefix'] ?? config('beam.calendars.resources.group_prefix', 'resources');
+        $middleware = $opts['middleware'] ?? config('beam.calendars.resources.middleware', ['web', 'auth']);
 
         Route::middleware($middleware)->prefix($groupPrefix)->group(function (): void {
             Particle::mount('calendars', 'calendars');
