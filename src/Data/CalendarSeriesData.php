@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Rushing\DataFilters\Attributes\Filterable;
 use Rushing\DataFilters\Attributes\Sortable;
+use Spatie\LaravelData\Attributes\MapName;
 use Splicewire\Beam\Calendars\Models\Calendar;
 use Splicewire\Beam\Calendars\Models\CalendarSeries;
 use Splicewire\Beam\Calendars\Recurrence\SeriesExpander;
@@ -33,12 +34,23 @@ use Splicewire\Beam\Particle\Attributes\ParticleResource;
     icon: 'repeat',
     section: 'calendars',
 )]
+/**
+ * ⚠️ The wire keys are DECLARED below, which is what makes the camelCase property spelling a
+ * style choice rather than a silent contract change.
+ *
+ * Under the host's global `input => CamelCaseMapper` / `output => null`, an UNDECLARED DTO
+ * publishes whatever the global mapper happens to produce. This package shipped with neither
+ * axis declared, so its read side emitted `calendar_id` while its write side demanded
+ * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
+ * asserts the published keys directly.
+ */
 class CalendarSeriesData extends Data
 {
     public function __construct(
         public string $id,
         #[Filterable]
-        public string $calendar_id,
+        #[MapName('calendar_id')]
+        public string $calendarId,
         #[Filterable]
         public string $channel,
         #[Sortable(default: true)]
@@ -47,6 +59,7 @@ class CalendarSeriesData extends Data
         public ?string $window,
         /** The RFC-5545 projection of the typed rule. Derived on read — never stored. */
         public ?string $rrule,
+        #[MapName('override_count')]
         public int $overrideCount,
     ) {}
 
@@ -66,7 +79,7 @@ class CalendarSeriesData extends Data
     {
         return new self(
             id: (string) $series->getKey(),
-            calendar_id: (string) $series->calendar_id,
+            calendarId: (string) $series->calendar_id,
             channel: (string) $series->channel,
             anchor: $series->anchor?->toDateString(),
             window: $series->window?->toDateString(),

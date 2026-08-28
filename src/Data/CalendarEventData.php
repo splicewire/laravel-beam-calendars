@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Rushing\DataFilters\Attributes\Filterable;
 use Rushing\DataFilters\Attributes\Sortable;
+use Spatie\LaravelData\Attributes\MapName;
 use Splicewire\Beam\Calendars\Models\Calendar;
 use Splicewire\Beam\Calendars\Models\CalendarEvent;
 use Splicewire\Beam\Data\Data;
@@ -35,12 +36,23 @@ use Splicewire\Beam\Particle\Attributes\ParticleResource;
     icon: 'calendar',
     section: 'calendars',
 )]
+/**
+ * ⚠️ The wire keys are DECLARED below, which is what makes the camelCase property spelling a
+ * style choice rather than a silent contract change.
+ *
+ * Under the host's global `input => CamelCaseMapper` / `output => null`, an UNDECLARED DTO
+ * publishes whatever the global mapper happens to produce. This package shipped with neither
+ * axis declared, so its read side emitted `calendar_id` while its write side demanded
+ * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
+ * asserts the published keys directly.
+ */
 class CalendarEventData extends Data
 {
     public function __construct(
         public string $id,
         #[Filterable]
-        public string $calendar_id,
+        #[MapName('calendar_id')]
+        public string $calendarId,
         #[Filterable]
         public string $channel,
         #[Filterable]
@@ -51,8 +63,10 @@ class CalendarEventData extends Data
         public ?string $title,
         #[Filterable]
         public ?string $status,
-        public ?string $series_id,
-        public ?string $recurrence_id,
+        #[MapName('series_id')]
+        public ?string $seriesId,
+        #[MapName('recurrence_id')]
+        public ?string $recurrenceId,
     ) {}
 
     /** Visible events are the events of visible calendars — nothing narrower, nothing wider. */
@@ -74,14 +88,14 @@ class CalendarEventData extends Data
 
         return new self(
             id: (string) $event->getKey(),
-            calendar_id: (string) $event->calendar_id,
+            calendarId: (string) $event->calendar_id,
             channel: (string) $event->channel,
             kind: $event->kind,
             anchor: $event->anchor?->toDateString(),
             title: is_string($payload['title'] ?? null) ? $payload['title'] : null,
             status: $event->status,
-            series_id: $event->series_id,
-            recurrence_id: $event->recurrence_id,
+            seriesId: $event->series_id,
+            recurrenceId: $event->recurrence_id,
         );
     }
 }

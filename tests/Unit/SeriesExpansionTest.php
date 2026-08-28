@@ -129,7 +129,7 @@ it('swaps the spawn of a replaced occurrence and leaves its siblings alone', fun
 
     expect($out[0]->spawn->mode)->toBe(SpawnMode::Generate)
         ->and($out[1]->spawn->mode)->toBe(SpawnMode::Reference)
-        ->and($out[1]->spawn->target_ref)->toBe('fixed-1');
+        ->and($out[1]->spawn->targetRef)->toBe('fixed-1');
 });
 
 it('keeps every occurrence pointing back at its source series', function () {

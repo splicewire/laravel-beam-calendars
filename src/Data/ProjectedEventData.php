@@ -4,6 +4,7 @@ namespace Splicewire\Beam\Calendars\Data;
 
 use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Example;
+use Spatie\LaravelData\Attributes\MapName;
 use Splicewire\Beam\Calendars\Projection\ProjectedEvent;
 use Splicewire\Beam\Data\Data;
 
@@ -23,12 +24,23 @@ use Splicewire\Beam\Data\Data;
  * for reasons nobody can find.
  */
 #[Description('One dated calendar entry: a stored event or a series\' virtual occurrence, with its write-target identity.')]
+/**
+ * ⚠️ The wire keys are DECLARED below, which is what makes the camelCase property spelling a
+ * style choice rather than a silent contract change.
+ *
+ * Under the host's global `input => CamelCaseMapper` / `output => null`, an UNDECLARED DTO
+ * publishes whatever the global mapper happens to produce. This package shipped with neither
+ * axis declared, so its read side emitted `calendar_id` while its write side demanded
+ * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
+ * asserts the published keys directly.
+ */
 class ProjectedEventData extends Data
 {
     public function __construct(
         #[Description('The stored row id, or null for a virtual occurrence — there is no write target until it is materialized.')]
         public ?string $id,
-        public string $calendar_id,
+        #[MapName('calendar_id')]
+        public string $calendarId,
         #[Example('default')]
         #[Description('The delivery lane this entry sits on.')]
         public string $channel,
@@ -39,9 +51,11 @@ class ProjectedEventData extends Data
         public string $anchor,
         public ?string $title,
         #[Description('Back-pointer to the source series row; null for a standalone event.')]
-        public ?string $series_ref,
+        #[MapName('series_ref')]
+        public ?string $seriesRef,
         #[Description('The RFC-5545 RECURRENCE-ID date coordinate; null for a standalone event.')]
-        public ?string $recurrence_id,
+        #[MapName('recurrence_id')]
+        public ?string $recurrenceId,
         #[Description('True for a computed, read-only occurrence; false for a stored row.')]
         public bool $virtual,
         #[Description('The stored row status; a virtual occurrence is always `upcoming`.')]
@@ -52,13 +66,13 @@ class ProjectedEventData extends Data
     {
         return new self(
             id: $event->id,
-            calendar_id: $event->calendarId,
+            calendarId: $event->calendarId,
             channel: $event->channel,
             kind: $event->kind,
             anchor: $event->anchor,
             title: $event->title,
-            series_ref: $event->seriesRef,
-            recurrence_id: $event->recurrenceId,
+            seriesRef: $event->seriesRef,
+            recurrenceId: $event->recurrenceId,
             virtual: $event->virtual,
             status: $event->status,
         );

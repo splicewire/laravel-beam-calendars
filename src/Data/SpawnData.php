@@ -4,6 +4,7 @@ namespace Splicewire\Beam\Calendars\Data;
 
 use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Title;
+use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Optional;
 use Splicewire\Beam\Calendars\Enums\SpawnMode;
 use Splicewire\Beam\Data\Data;
@@ -25,6 +26,16 @@ use Splicewire\Beam\Data\Data;
  * that explains why this must not be "simplified".
  */
 #[Title('Each occurrence')]
+/**
+ * ⚠️ The wire keys are DECLARED below, which is what makes the camelCase property spelling a
+ * style choice rather than a silent contract change.
+ *
+ * Under the host's global `input => CamelCaseMapper` / `output => null`, an UNDECLARED DTO
+ * publishes whatever the global mapper happens to produce. This package shipped with neither
+ * axis declared, so its read side emitted `calendar_id` while its write side demanded
+ * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
+ * asserts the published keys directly.
+ */
 class SpawnData extends Data
 {
     public function __construct(
@@ -36,9 +47,11 @@ class SpawnData extends Data
         public string|Optional $instructions = new Optional,
         #[Title('Definition reference')]
         #[Description('An optional definition each occurrence generates from.')]
-        public string|Optional $definition_ref = new Optional,
+        #[MapName('definition_ref')]
+        public string|Optional $definitionRef = new Optional,
         #[Title('Target')]
         #[Description('The fixed item each occurrence re-surfaces (reference mode). Opaque to this package.')]
-        public string|Optional $target_ref = new Optional,
+        #[MapName('target_ref')]
+        public string|Optional $targetRef = new Optional,
     ) {}
 }

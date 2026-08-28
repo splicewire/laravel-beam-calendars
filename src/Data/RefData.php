@@ -5,6 +5,7 @@ namespace Splicewire\Beam\Calendars\Data;
 use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Title;
 use Schemastud\DataSchemas\Contracts\SchemaIdentity;
+use Spatie\LaravelData\Attributes\MapName;
 use Splicewire\Beam\Data\Data;
 
 /**
@@ -21,6 +22,16 @@ use Splicewire\Beam\Data\Data;
  * distinct kinds registers three keys in the kind registry pointing at this same class.
  */
 #[Title('Scheduled reference')]
+/**
+ * ⚠️ The wire keys are DECLARED below, which is what makes the camelCase property spelling a
+ * style choice rather than a silent contract change.
+ *
+ * Under the host's global `input => CamelCaseMapper` / `output => null`, an UNDECLARED DTO
+ * publishes whatever the global mapper happens to produce. This package shipped with neither
+ * axis declared, so its read side emitted `calendar_id` while its write side demanded
+ * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
+ * asserts the published keys directly.
+ */
 class RefData extends Data implements SchemaIdentity
 {
     public function __construct(
@@ -31,10 +42,12 @@ class RefData extends Data implements SchemaIdentity
         public string $anchor,
         #[Title('Target type')]
         #[Description('Host-owned discriminator for what is being referenced. Opaque here.')]
-        public ?string $target_type = null,
+        #[MapName('target_type')]
+        public ?string $targetType = null,
         #[Title('Target')]
         #[Description('The referenced item id. Opaque here — never dereferenced by this package.')]
-        public ?string $target_ref = null,
+        #[MapName('target_ref')]
+        public ?string $targetRef = null,
         #[Title('Title')]
         #[Description('A cached human label for the referent, so a listing needs no per-row fetch.')]
         public ?string $title = null,

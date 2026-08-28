@@ -5,6 +5,7 @@ namespace Splicewire\Beam\Calendars\Data;
 use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Title;
 use Schemastud\DataSchemas\Contracts\SchemaIdentity;
+use Spatie\LaravelData\Attributes\MapName;
 use Splicewire\Beam\Data\Data;
 
 /**
@@ -17,6 +18,16 @@ use Splicewire\Beam\Data\Data;
  * "something should stop on this date" is a calendar concept; the consequence is not.
  */
 #[Title('Decommission')]
+/**
+ * ⚠️ The wire keys are DECLARED below, which is what makes the camelCase property spelling a
+ * style choice rather than a silent contract change.
+ *
+ * Under the host's global `input => CamelCaseMapper` / `output => null`, an UNDECLARED DTO
+ * publishes whatever the global mapper happens to produce. This package shipped with neither
+ * axis declared, so its read side emitted `calendar_id` while its write side demanded
+ * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
+ * asserts the published keys directly.
+ */
 class DecommissionData extends Data implements SchemaIdentity
 {
     public function __construct(
@@ -27,9 +38,11 @@ class DecommissionData extends Data implements SchemaIdentity
         #[Description('When the target should be retired.')]
         public string $anchor,
         #[Title('Target type')]
-        public ?string $target_type = null,
+        #[MapName('target_type')]
+        public ?string $targetType = null,
         #[Title('Target')]
-        public ?string $target_ref = null,
+        #[MapName('target_ref')]
+        public ?string $targetRef = null,
         #[Title('Reason')]
         public ?string $reason = null,
     ) {}

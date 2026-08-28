@@ -42,7 +42,7 @@ class SweepCalendar
     public static function respond(Calendar $calendar, bool $queued): SweepResultData
     {
         return new SweepResultData(
-            calendar_id: (string) $calendar->getKey(),
+            calendarId: (string) $calendar->getKey(),
             queued: $queued,
             fired: [],
             firedCount: 0,

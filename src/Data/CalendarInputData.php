@@ -20,6 +20,16 @@ use Splicewire\Beam\Write\Contracts\MapsToModelAttributes;
  * one clearing it, and the map below cannot honour either intent without breaking the other. See
  * {@see RecurrenceRuleData} for the full mechanism.
  */
+/**
+ * ⚠️ The wire keys are DECLARED below, which is what makes the camelCase property spelling a
+ * style choice rather than a silent contract change.
+ *
+ * Under the host's global `input => CamelCaseMapper` / `output => null`, an UNDECLARED DTO
+ * publishes whatever the global mapper happens to produce. This package shipped with neither
+ * axis declared, so its read side emitted `calendar_id` while its write side demanded
+ * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
+ * asserts the published keys directly.
+ */
 class CalendarInputData extends Data implements MapsToModelAttributes
 {
     public function __construct(

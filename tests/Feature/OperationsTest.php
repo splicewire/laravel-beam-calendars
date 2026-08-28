@@ -36,7 +36,7 @@ it('projects the horizon as wire DTOs', function () {
         ->and($out[0]->anchor)->toBe('2026-01-05')
         ->and($out[0]->virtual)->toBeTrue()
         ->and($out[0]->id)->toBeNull()
-        ->and($out[0]->calendar_id)->toBe((string) $this->calendar->getKey());
+        ->and($out[0]->calendarId)->toBe((string) $this->calendar->getKey());
 });
 
 it('exports through the operation with the renderer’s own media type', function () {
@@ -57,7 +57,7 @@ it('answers the Task op with its DECLARED shape, not a bare queued flag', functi
     // Without respond(), a Task answers `{queued: true}` and the output: declaration is a lie.
     $out = SweepCalendar::respond($this->calendar, true);
 
-    expect($out->calendar_id)->toBe((string) $this->calendar->getKey())
+    expect($out->calendarId)->toBe((string) $this->calendar->getKey())
         ->and($out->queued)->toBeTrue()
         ->and($out->firedCount)->toBe(0);
 });
@@ -71,7 +71,7 @@ it('pins a virtual occurrence into a real row', function () {
         'title' => 'Pinned',
     ]));
 
-    expect($out->recurrence_id)->toBe('2026-01-06')
+    expect($out->recurrenceId)->toBe('2026-01-06')
         ->and($out->title)->toBe('Pinned')
         ->and(CalendarEvent::query()->count())->toBe(1);
 });
@@ -92,7 +92,7 @@ it('lets a pin MOVE the instance off its computed date', function () {
         'anchor' => '2026-02-01',
     ]));
 
-    expect($out->anchor)->toBe('2026-02-01')->and($out->recurrence_id)->toBe('2026-01-06');
+    expect($out->anchor)->toBe('2026-02-01')->and($out->recurrenceId)->toBe('2026-01-06');
 });
 
 it('writes a skip as an override ON THE SERIES, as a list', function () {
@@ -148,5 +148,5 @@ it('can still PIN an instance that has already been skipped — an override is n
         'title' => 'Restored',
     ]));
 
-    expect($out->recurrence_id)->toBe('2026-01-06')->and($out->title)->toBe('Restored');
+    expect($out->recurrenceId)->toBe('2026-01-06')->and($out->title)->toBe('Restored');
 });

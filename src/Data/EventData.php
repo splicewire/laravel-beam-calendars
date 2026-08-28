@@ -15,6 +15,16 @@ use Splicewire\Beam\Data\Data;
  * exactly what distinguishes it from {@see RefData}.
  */
 #[Title('Event')]
+/**
+ * ⚠️ The wire keys are DECLARED below, which is what makes the camelCase property spelling a
+ * style choice rather than a silent contract change.
+ *
+ * Under the host's global `input => CamelCaseMapper` / `output => null`, an UNDECLARED DTO
+ * publishes whatever the global mapper happens to produce. This package shipped with neither
+ * axis declared, so its read side emitted `calendar_id` while its write side demanded
+ * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
+ * asserts the published keys directly.
+ */
 class EventData extends Data implements SchemaIdentity
 {
     public function __construct(
