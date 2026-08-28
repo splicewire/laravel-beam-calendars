@@ -1,0 +1,105 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Rushing\SchemaConvergence\ConvergentTable;
+use Splicewire\Beam\Facades\Beam;
+
+/**
+ * Dated rows — the materialized half of a calendar. `kind` is the registry key
+ * (`kind.event`, `kind.ref`, …) and `payload` is the typed shape that key resolves to; the
+ * package validates the pair on write and never interprets an unregistered kind.
+ *
+ * ⚠️ The `(series_id, recurrence_id)` pair is the load-bearing part. A row spawned from — or
+ * pinned over — a series carries both, which makes "a stored event SUPERSEDES its virtual twin"
+ * a row-existence check on that exact pair. That replaces the older approach of matching an
+ * expanded occurrence back to a stored cell by date, which had to re-derive the same identity on
+ * every projection and got it wrong whenever a pinned instance moved off its computed date.
+ *
+ * The unique index is partial where the driver supports one, because `recurrence_id` is NULL for
+ * every ordinary (non-series) event and NULLs compare distinct — so a plain unique over the pair
+ * would never fire for the rows that need no uniqueness and would silently not fire for the rows
+ * that do.
+ *
+ * SHARED PLACEMENT: central/tenant-agnostic, the fleet default. See create_calendars_table.
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        $schema = $this->currentSchema();
+
+        ConvergentTable::named($this->target())
+            ->existsUsing(fn (string $table): bool => $this->exists($schema, $table))
+            ->define(function (Blueprint $table): void {
+                $table->uuid('id')->primary();
+                $table->uuid('calendar_id')->index();
+                $table->string('channel')->index();
+                $table->string('kind')->index();
+                $table->date('anchor')->index();
+                $table->json('payload')->nullable();
+
+                // Set on a row that materializes one instance of a series.
+                $table->uuid('series_id')->nullable()->index();
+                $table->string('recurrence_id')->nullable();
+
+                $table->string('status')->nullable()->index();
+                $table->timestamps();
+
+                $table->index(['calendar_id', 'channel', 'anchor']);
+            })
+            ->assert();
+
+        if (in_array(Schema::getConnection()->getDriverName(), ['pgsql', 'sqlite'], true)) {
+            // `if not exists` because the convergent guard makes this reachable on a table that
+            // already exists — raw DDL beside the guard is not covered by it.
+            DB::statement(
+                'create unique index if not exists calendar_events_recurrence_unique on '.$this->target()
+                .' (series_id, recurrence_id) where series_id is not null and recurrence_id is not null'
+            );
+        }
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists($this->target());
+    }
+
+    private function target(): string
+    {
+        return Beam::tableFor('beam.calendars.tables.calendar_events', 'calendar_events');
+    }
+
+    /**
+     * Postgres only. On any other driver there is no `current_schema()` and no search_path for a
+     * central table to leak through, so there is nothing to disambiguate and null says so.
+     */
+    private function currentSchema(): ?string
+    {
+        return Schema::getConnection()->getDriverName() === 'pgsql'
+            ? DB::selectOne('select current_schema() as schema')->schema
+            : null;
+    }
+
+    /**
+     * ⚠️ The two branches are not interchangeable, and each is WRONG on the other's driver.
+     *
+     * On Postgres, `Schema::hasTable()` follows the tenant search_path and so reports a CENTRAL
+     * table as present inside a tenant schema — which would make the convergent guard skip creating
+     * the tenant's own copy. Hence the information_schema probe pinned to the current schema.
+     *
+     * On SQLite there is no information_schema at all, so that probe is not merely unnecessary but
+     * fatal. Keeping both branches is what lets this package's suite run the REAL migration stubs
+     * rather than a hand-built fixture schema that can quietly drift away from them.
+     */
+    private function exists(?string $schema, string $table): bool
+    {
+        if ($schema === null) {
+            return Schema::hasTable($table);
+        }
+
+        return DB::selectOne('select 1 from information_schema.tables where table_schema = ? and table_name = ?', [$schema, $table]) !== null;
+    }
+};

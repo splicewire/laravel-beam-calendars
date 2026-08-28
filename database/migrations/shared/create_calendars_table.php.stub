@@ -1,0 +1,96 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Rushing\SchemaConvergence\ConvergentTable;
+use Splicewire\Beam\Facades\Beam;
+
+/**
+ * The calendar particle. Column shape mirrors `beam_particles` — the versioned payload envelope
+ * (`schema_ref`/`schema_id`/`migration_status`/`head_version`/`payload`/`meta`) plus a THIN
+ * queryable projection of the axes a listing actually filters or sorts on.
+ *
+ * Derived facts are deliberately NOT columns: event count, next occurrence and last-fired are
+ * accessors, so they can never be the reason this table needs a migration.
+ *
+ * SHARED PLACEMENT: central/tenant-AGNOSTIC, the fleet default, so it lives in `shared/` and runs
+ * on BOTH passes (central `migrate` + the per-tenant migrator via beam-tenancy's registered shared
+ * path). The current-schema guard is what makes the double pass idempotent.
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        $schema = $this->currentSchema();
+
+        ConvergentTable::named($this->target())
+            ->existsUsing(fn (string $table): bool => $this->exists($schema, $table))
+            ->define(function (Blueprint $table): void {
+                $table->uuid('id')->primary();
+
+                // The particle envelope.
+                $table->string('schema_ref')->nullable();
+                $table->string('schema_id')->nullable();
+                $table->string('migration_status')->nullable();
+                $table->unsignedInteger('head_version')->nullable();
+                $table->json('payload')->nullable();
+                $table->json('meta')->nullable();
+
+                // The queryable projection.
+                $table->string('slug')->nullable();
+                $table->string('title')->nullable();
+                $table->string('timezone')->default('UTC');
+                $table->string('visibility')->nullable()->index();
+                $table->string('user_type')->nullable();
+                $table->string('user_id')->nullable();
+                $table->timestamps();
+
+                $table->index(['user_type', 'user_id']);
+                $table->unique(['user_type', 'user_id', 'slug'], 'calendars_owner_slug_unique');
+            })
+            ->assert();
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists($this->target());
+    }
+
+    private function target(): string
+    {
+        return Beam::tableFor('beam.calendars.tables.calendars', 'calendars');
+    }
+
+    /**
+     * Postgres only. On any other driver there is no `current_schema()` and no search_path for a
+     * central table to leak through, so there is nothing to disambiguate and null says so.
+     */
+    private function currentSchema(): ?string
+    {
+        return Schema::getConnection()->getDriverName() === 'pgsql'
+            ? DB::selectOne('select current_schema() as schema')->schema
+            : null;
+    }
+
+    /**
+     * ⚠️ The two branches are not interchangeable, and each is WRONG on the other's driver.
+     *
+     * On Postgres, `Schema::hasTable()` follows the tenant search_path and so reports a CENTRAL
+     * table as present inside a tenant schema — which would make the convergent guard skip creating
+     * the tenant's own copy. Hence the information_schema probe pinned to the current schema.
+     *
+     * On SQLite there is no information_schema at all, so that probe is not merely unnecessary but
+     * fatal. Keeping both branches is what lets this package's suite run the REAL migration stubs
+     * rather than a hand-built fixture schema that can quietly drift away from them.
+     */
+    private function exists(?string $schema, string $table): bool
+    {
+        if ($schema === null) {
+            return Schema::hasTable($table);
+        }
+
+        return DB::selectOne('select 1 from information_schema.tables where table_schema = ? and table_name = ?', [$schema, $table]) !== null;
+    }
+};

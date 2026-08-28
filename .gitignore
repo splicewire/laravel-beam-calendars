@@ -1,0 +1,8 @@
+/vendor/
+composer.lock
+composer.local.json
+
+/.phpunit.cache
+*.sqlite
+
+CLAUDE.md

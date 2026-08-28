@@ -1,0 +1,96 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Rushing\SchemaConvergence\ConvergentTable;
+use Splicewire\Beam\Facades\Beam;
+
+/**
+ * One row per recurrence RULE. The rule is the truth; the dated instances it implies are NOT rows.
+ *
+ * A series stays O(1) on disk no matter how long it runs — expansion into virtual Occurrences is a
+ * read-time projection bounded by a horizon, never a write. `overrides` carries RFC-5545
+ * EXDATE/RECURRENCE-ID pins as a LIST (never a keyed map: a map projects to a JSON-Schema
+ * `type: array` that would then reject a JSON object).
+ *
+ * `rule` and `spawn` are stored as typed payloads, not as an RRULE string. The RRULE string is an
+ * OUTPUT projection the ICS renderer derives — storing it would make the string the source of
+ * truth and put the recurrence outside the write-validation and payload-migration path every
+ * other stored shape rides.
+ *
+ * SHARED PLACEMENT: central/tenant-agnostic, the fleet default. See create_calendars_table.
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        $schema = $this->currentSchema();
+
+        ConvergentTable::named($this->target())
+            ->existsUsing(fn (string $table): bool => $this->exists($schema, $table))
+            ->define(function (Blueprint $table): void {
+                $table->uuid('id')->primary();
+                $table->uuid('calendar_id')->index();
+                $table->string('channel')->index();
+
+                // The series' START date — satisfies the schedulable contract like any dated row.
+                $table->date('anchor');
+
+                $table->json('rule');
+                $table->json('spawn');
+
+                // An optional bounded expansion horizon: the expander will not project past this
+                // when the rule is otherwise unbounded.
+                $table->date('window')->nullable();
+
+                $table->json('overrides')->nullable();
+                $table->timestamps();
+
+                $table->index(['calendar_id', 'channel', 'anchor']);
+            })
+            ->assert();
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists($this->target());
+    }
+
+    private function target(): string
+    {
+        return Beam::tableFor('beam.calendars.tables.calendar_series', 'calendar_series');
+    }
+
+    /**
+     * Postgres only. On any other driver there is no `current_schema()` and no search_path for a
+     * central table to leak through, so there is nothing to disambiguate and null says so.
+     */
+    private function currentSchema(): ?string
+    {
+        return Schema::getConnection()->getDriverName() === 'pgsql'
+            ? DB::selectOne('select current_schema() as schema')->schema
+            : null;
+    }
+
+    /**
+     * ⚠️ The two branches are not interchangeable, and each is WRONG on the other's driver.
+     *
+     * On Postgres, `Schema::hasTable()` follows the tenant search_path and so reports a CENTRAL
+     * table as present inside a tenant schema — which would make the convergent guard skip creating
+     * the tenant's own copy. Hence the information_schema probe pinned to the current schema.
+     *
+     * On SQLite there is no information_schema at all, so that probe is not merely unnecessary but
+     * fatal. Keeping both branches is what lets this package's suite run the REAL migration stubs
+     * rather than a hand-built fixture schema that can quietly drift away from them.
+     */
+    private function exists(?string $schema, string $table): bool
+    {
+        if ($schema === null) {
+            return Schema::hasTable($table);
+        }
+
+        return DB::selectOne('select 1 from information_schema.tables where table_schema = ? and table_name = ?', [$schema, $table]) !== null;
+    }
+};
