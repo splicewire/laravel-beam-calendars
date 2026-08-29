@@ -84,10 +84,25 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
         CascadePolicyRegistrar::register(CalendarEvent::class);
         CascadePolicyRegistrar::register(CalendarSeries::class);
 
-        // Mount the particle surface. Guarded internally on the beam particle infra, so this is a
-        // no-op in a headless env or the standalone package test.
+        // DECLARE the particle surface — registration only, never mounting. Guarded internally on the
+        // beam particle infra, so this is a no-op in a headless env or the standalone package test.
+        //
+        // ⚠️ **This called `Resources::register()` until registry-kernel ticket 70, and the difference
+        // is 21 routes.** While the mount half sat behind a `Route::hasMacro('particleResource')` probe
+        // that api-surface-coherence 93 had turned into an unconditional early return, the two calls
+        // were indistinguishable. Deleting that dead probe made them differ: `register()` publishes
+        // `resources/calendars*` under this package's `['web','auth']` default, BESIDE the
+        // `api/v1/calendars` surface the flagship already serves from `routes/tenant.php` under a
+        // seven-layer tenancy stack — two live roots for one resource, one of them with no tenancy
+        // initialization at all.
+        //
+        // Mounting is the HOST's call here, which `routes/tenant.php` says in terms. It stays that way
+        // until [registry-kernel 71] settles how a package NAMES a tenancy stack it cannot know —
+        // beam-tenancy registers no middleware alias or group today, and eight of the nine hosts that
+        // install this package have no tenancy at all. `Resources::register([...])` remains available
+        // for a host that wants the package to mount with its own prefix and middleware.
         if (config('beam.calendars.register_resources', true)) {
-            Resources::register();
+            Resources::declare();
         }
 
         // The three registries this package owns, described from the OWNER's own boot — a registry

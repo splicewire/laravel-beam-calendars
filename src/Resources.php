@@ -128,24 +128,39 @@ class Resources
     /**
      * MOUNT the declared surface onto HTTP.
      *
-     * This one may legitimately no-op: mounting needs beam's route macros, and a headless environment
-     * or the package's own suite has none. What must NOT no-op with it is {@see declare()}.
+     * ⚠️ **The `Route::hasMacro('particleResource')` half of this guard was deleted by registry-kernel
+     * ticket 70, and the docblock it stood on was wrong by then.** api-surface-coherence 93 deleted all
+     * six particle route macros on 2026-08-27 and moved their bodies into
+     * {@see \Splicewire\Beam\Particle\Mount\ParticleMounter}, which takes an INJECTED `Router` — so
+     * the headless-fatal this guard existed to prevent cannot happen any more. Measured, not reasoned:
+     * running this body past the guard in a package testbench with no particle macros mounts the full
+     * surface and does not fatal. `class_exists()` answers the only live question, which is whether beam
+     * is installed at all.
+     *
+     * Left as a warning rather than deleted silently, because the guard read as correct for two days
+     * while being an unconditional early return: 93 converted the CALL SITES below and did not re-read
+     * the guard three lines above them. A guard is not a call site.
      */
     public static function register(array $opts = []): void
     {
         self::declare();
 
-        if (! class_exists(ParticleOperationRegistry::class) || ! Route::hasMacro('particleResource')) {
-            return; // no router macros — declared but not mounted, which is a valid state.
+        if (! class_exists(ParticleOperationRegistry::class)) {
+            return; // beam particle infra genuinely absent (a headless install).
         }
 
         $groupPrefix = $opts['group_prefix'] ?? config('beam.calendars.resources.group_prefix', 'resources');
         $middleware = $opts['middleware'] ?? config('beam.calendars.resources.middleware', ['web', 'auth']);
+        // A fact about THIS package's models, not about the host: `Calendar`, `CalendarEvent`,
+        // `CalendarSeries` and `CalendarFiring` all `use HasUuids`. The flagship was passing
+        // `->idConstraint('uuid')` by hand because the package never asserted what it already knew
+        // (registry-kernel 70 Q1). Overridable for a host that keys these differently.
+        $idConstraint = $opts['idConstraint'] ?? 'uuid';
 
-        Route::middleware($middleware)->prefix($groupPrefix)->group(function (): void {
-            Particle::mount('calendars', 'calendars');
-            Particle::mount('calendar-events', 'calendar-events');
-            Particle::mount('calendar-series', 'calendar-series');
+        Route::middleware($middleware)->prefix($groupPrefix)->group(function () use ($idConstraint): void {
+            Particle::mount('calendars', 'calendars')->idConstraint($idConstraint);
+            Particle::mount('calendar-events', 'calendar-events')->idConstraint($idConstraint);
+            Particle::mount('calendar-series', 'calendar-series')->idConstraint($idConstraint);
 
             // `Particle::ops()` both DISCOVERS (registers) the attributed ops and mounts them at
             // `calendars/{id}/op/{name}`, so there is no separate registration step to forget.
