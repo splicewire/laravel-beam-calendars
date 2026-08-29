@@ -149,8 +149,16 @@ class Resources
             return; // beam particle infra genuinely absent (a headless install).
         }
 
-        $groupPrefix = $opts['group_prefix'] ?? config('beam.calendars.resources.group_prefix', 'resources');
-        $middleware = $opts['middleware'] ?? config('beam.calendars.resources.middleware', ['web', 'auth']);
+        // ⚠️ **Both default to EMPTY (registry-kernel 71), and that is the design rather than an
+        // omission.** Laravel MERGES a nested group's middleware into its parent's rather than
+        // replacing it, so a package that names its own stack APPENDS to the host's instead of
+        // choosing: called from inside the flagship's tenant group, the former `['web','auth']` default
+        // produced `api, TenancyInit, auth:sanctum, web, auth` — a session-starting `web` on an API
+        // route and the session guard beside `auth:sanctum`. Declaring nothing makes central-vs-tenant
+        // fall out of WHERE the host calls from, which is the one place that knows. An empty group is
+        // inert: measured to inherit the ambient stack exactly, with no stray path segment.
+        $groupPrefix = $opts['group_prefix'] ?? config('beam.calendars.resources.group_prefix', '');
+        $middleware = $opts['middleware'] ?? config('beam.calendars.resources.middleware', []);
         // A fact about THIS package's models, not about the host: `Calendar`, `CalendarEvent`,
         // `CalendarSeries` and `CalendarFiring` all `use HasUuids`. The flagship was passing
         // `->idConstraint('uuid')` by hand because the package never asserted what it already knew
