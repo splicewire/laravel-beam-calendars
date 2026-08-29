@@ -56,10 +56,16 @@ class Resources
             return; // beam particle infra genuinely absent (a headless install).
         }
 
-        app(AttributedParticleDiscovery::class)->discover([
-            CalendarData::class,
-            CalendarEventData::class,
-            CalendarSeriesData::class,
+        // This package's own declaration roots, scanned rather than named: `src/Data` holds the three
+        // `#[ParticleResource]` DTOs, `src/Ops` the five `#[ParticleOp]` classes. The ops used to reach
+        // the registry ONLY at route-mount time (`Particle::ops()` discovers as it mounts), so in a
+        // console context — where nothing mounts — this package declared three things and beam's op
+        // registry knew of none of them. Declaring both here makes the declaration true of the process
+        // rather than of the request, which is the same correction the `declare()`/`register()` split
+        // above already made for the resources.
+        app(AttributedParticleDiscovery::class)->discover(paths: [
+            __DIR__.'/Data',
+            __DIR__.'/Ops',
         ]);
 
         self::declareFilterResources();
