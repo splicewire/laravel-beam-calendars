@@ -3,6 +3,7 @@
 namespace Splicewire\Beam\Calendars\Data;
 
 use Spatie\LaravelData\Attributes\MapName;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
 
 /**
@@ -19,7 +20,17 @@ use Splicewire\Beam\Data\BeamData;
  * axis declared, so its read side emitted `calendar_id` while its write side demanded
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
+ *
+ * ⚠️ **`#[TypeScript]` is not decoration here — without it this package's generated client does not
+ * compile.** The sweep op declares this class as its return, so `splicewire:beam:generate:client`
+ * emits `calendars-op.ts` referencing `Splicewire.Beam.Calendars.Data.SweepResultData`, and the type is
+ * only emitted for a class that declares the attribute. Measured 2026-08-29 at `~/Herd/splicewire-app`:
+ * regenerating produced exactly three `tsc` errors, all *"Namespace
+ * 'Splicewire.Beam.Calendars.Data' has no exported member 'SweepResultData'"*, and this class was the
+ * only one of the package's four Data classes without the attribute. That is why the flagship's
+ * `ui/src/generated` had gone stale rather than being refreshed — regenerating it broke the build.
  */
+#[TypeScript]
 class SweepResultData extends BeamData
 {
     /**
