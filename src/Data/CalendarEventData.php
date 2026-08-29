@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Rushing\DataFilters\Attributes\Filterable;
 use Rushing\DataFilters\Attributes\Sortable;
+use Rushing\DataFilters\Operators\Exact;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Calendars\Models\Calendar;
@@ -52,18 +53,18 @@ class CalendarEventData extends BeamData
 {
     public function __construct(
         public string $id,
-        #[Filterable]
+        #[Filterable(Exact::class)]
         #[MapName('calendar_id')]
         public string $calendarId,
-        #[Filterable]
+        #[Filterable(Exact::class)]
         public string $channel,
-        #[Filterable]
+        #[Filterable(Exact::class)]
         public ?string $kind,
         #[Sortable(default: true)]
-        #[Filterable]
+        #[Filterable(Exact::class)]
         public ?string $anchor,
         public ?string $title,
-        #[Filterable]
+        #[Filterable(Exact::class)]
         public ?string $status,
         #[MapName('series_id')]
         public ?string $seriesId,

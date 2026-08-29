@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Rushing\DataFilters\Attributes\Filterable;
 use Rushing\DataFilters\Attributes\Sortable;
+use Rushing\DataFilters\Operators\Exact;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Calendars\Models\Calendar;
@@ -50,13 +51,13 @@ class CalendarSeriesData extends BeamData
 {
     public function __construct(
         public string $id,
-        #[Filterable]
+        #[Filterable(Exact::class)]
         #[MapName('calendar_id')]
         public string $calendarId,
-        #[Filterable]
+        #[Filterable(Exact::class)]
         public string $channel,
         #[Sortable(default: true)]
-        #[Filterable]
+        #[Filterable(Exact::class)]
         public ?string $anchor,
         public ?string $window,
         /** The RFC-5545 projection of the typed rule. Derived on read — never stored. */

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Rushing\DataFilters\Attributes\Filterable;
 use Rushing\DataFilters\Attributes\Sortable;
+use Rushing\DataFilters\Operators\Exact;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Calendars\Models\Calendar;
@@ -30,7 +31,21 @@ use Splicewire\Beam\Particle\Attributes\ParticleResource;
  *
  * ⚠️ `filterable: true` requires a data-filters REGISTRATION to actually produce that query —
  * `config/data-filters.php`, `#[ResourceFilter]` discovery, or `DataFilter::resource()`. The
- * attribute alone is a declaration of intent, not the wiring.
+ * attribute alone is a declaration of intent, not the wiring. Measured at the flagship
+ * 2026-08-29: `GET /api/v1/calendars` is a live 500 for exactly this reason ("No data-filters
+ * resource is registered under [calendars]"), and the same holds for the two sibling resources.
+ *
+ * ⚠️ Every facet here is `Exact::class`, declared explicitly. These three DTOs shipped with a
+ * BARE `#[Filterable]`, which has never been legal — `Filterable::__construct()` has required the
+ * operator class-string since the package's first commit. It went unnoticed because an attribute
+ * is inert source text until something calls `newInstance()`, so the class loaded, the suite was
+ * green, and every consumer that REFLECTS it died: the flagship's OpenAPI parameter-coverage test
+ * and the JSON-Schema generator behind frame's edit form (3 of 44 particle resources could not
+ * generate a schema at all, and all three were these). `Exact` rather than a wider operator
+ * because `filter[…]` semantics are a published contract and nothing here declared a wider one —
+ * every backing column but `title` is an indexed identifier/enum string, which is what exact
+ * equality is for. Widening `title` to a `Partial`/`IlikeMatch` search is a deliberate contract
+ * change and should have to edit `FilterFacetTest` to make it.
  */
 #[ParticleResource(
     key: 'calendars',
@@ -60,12 +75,12 @@ class CalendarData extends BeamData
     public function __construct(
         public string $id,
         #[Sortable(default: true)]
-        #[Filterable]
+        #[Filterable(Exact::class)]
         public ?string $title,
-        #[Filterable]
+        #[Filterable(Exact::class)]
         public ?string $slug,
         public string $timezone,
-        #[Filterable]
+        #[Filterable(Exact::class)]
         public ?string $visibility,
         /** Derived, never a column — see the CalendarParticle trait. */
         #[MapName('event_count')]
