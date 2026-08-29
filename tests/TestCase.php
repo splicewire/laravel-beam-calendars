@@ -5,6 +5,7 @@ namespace Splicewire\Beam\Calendars\Tests;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Orchestra\Testbench\TestCase as Orchestra;
+use Rushing\DataFilters\ServiceProvider as DataFiltersServiceProvider;
 use Rushing\PermissionCascade\PermissionCascadeServiceProvider;
 use Rushing\Popcorn\Laravel\PopcornServiceProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
@@ -44,6 +45,13 @@ abstract class TestCase extends Orchestra
             // throwaway — the registry reads back EMPTY and the failure looks like discovery not
             // working. It is the binding, not the discovery.
             BeamServiceProvider::class,
+
+            // ⚠️ The SIXTH instance of the same trap. `ResourceRegistry` is auto-resolvable, so
+            // without this provider `app()` mints a FRESH one per call: the package's filter
+            // registration would land in a throwaway and every read would see an empty registry —
+            // green suite, no registrations, no error. It also binds `DataFilterManager`, which is
+            // what `DataFilter::query()` resolves through.
+            DataFiltersServiceProvider::class,
 
             BeamCalendarsServiceProvider::class,
         ];

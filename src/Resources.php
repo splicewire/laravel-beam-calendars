@@ -3,6 +3,8 @@
 namespace Splicewire\Beam\Calendars;
 
 use Illuminate\Support\Facades\Route;
+use Rushing\DataFilters\Registry\ResourceDefinition;
+use Rushing\DataFilters\Registry\ResourceRegistry;
 use Splicewire\Beam\Calendars\Data\CalendarData;
 use Splicewire\Beam\Calendars\Data\CalendarEventData;
 use Splicewire\Beam\Calendars\Data\CalendarSeriesData;
@@ -11,6 +13,7 @@ use Splicewire\Beam\Calendars\Ops\MaterializeOccurrence;
 use Splicewire\Beam\Calendars\Ops\ProjectHorizon;
 use Splicewire\Beam\Calendars\Ops\SkipOccurrence;
 use Splicewire\Beam\Calendars\Ops\SweepCalendar;
+use Splicewire\Beam\Calendars\Query\CalendarResourceQuery;
 use Splicewire\Beam\Facades\Particle;
 use Splicewire\Beam\Particle\Attributes\AttributedParticleDiscovery;
 use Splicewire\Beam\Particle\ParticleOperationRegistry;
@@ -58,6 +61,62 @@ class Resources
             CalendarEventData::class,
             CalendarSeriesData::class,
         ]);
+
+        self::declareFilterResources();
+    }
+
+    /**
+     * Ship the three `data-filters` resources that back the three `filterable: true` particle
+     * resources declared above.
+     *
+     * ⚠️ **This package MUST ship them.** All three DTOs declare `filterable: true`, and beam's
+     * `ParticleController::index` sends a filterable resource through `hydrator->query($key)`, which
+     * raises `BadMethodCallException` on a key with no data-filters registration. Measured at
+     * `~/Herd/splicewire-app` on 2026-08-29: `GET /api/v1/calendars`, `/calendar-events` and
+     * `/calendar-series` were all a live **500** for exactly this reason. The earlier bare
+     * `#[Filterable]` defect (25545b8) had been MASKING it — the list path died on the attribute
+     * before it ever reached the registry lookup.
+     *
+     * `filterable: false` is not the escape: that path is `defaultSortedQuery()`, which cannot see
+     * the request, and these three exist to be filtered by `calendarId` / `channel` / `status`.
+     *
+     * Registered IMPERATIVELY rather than through `#[ResourceFilter]` discovery, following
+     * `splicewire/laravel-beam-lineage`, because that door is closed to packages:
+     * `config('data-filters.discover')` is host-owned and empty by default — the same closed door
+     * `discover_paths` is for particles. A package cannot add itself to a host's config array.
+     *
+     * No `model:` — beam's `ParticleResourceModelResolver` fills data-filters' model-resolver port
+     * off the `#[ParticleResource]` registered under the *same key*, lazily at resolution time. So
+     * the backing model lives in exactly one place and cannot drift from the particle path's.
+     *
+     * The `has()` guard is **the caller's job, not the registry's.** `registerDefinition()`
+     * overwrites plainly, so an unguarded package registration would silently stomp a host that
+     * seeded its own `calendars` key from config. Guarding makes this strictly additive: a host that
+     * wants its own wiring simply declares it, and wins.
+     */
+    protected static function declareFilterResources(): void
+    {
+        if (! app()->bound(ResourceRegistry::class)) {
+            return; // data-filters genuinely absent — the particles are declared, just not filterable.
+        }
+
+        $registry = app(ResourceRegistry::class);
+
+        foreach ([
+            'calendars' => CalendarData::class,
+            'calendar-events' => CalendarEventData::class,
+            'calendar-series' => CalendarSeriesData::class,
+        ] as $key => $data) {
+            if ($registry->has($key)) {
+                continue;
+            }
+
+            $registry->registerDefinition(new ResourceDefinition(
+                key: $key,
+                data: $data,
+                query: CalendarResourceQuery::class,
+            ));
+        }
     }
 
     /**
