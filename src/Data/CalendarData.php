@@ -3,13 +3,12 @@
 namespace Splicewire\Beam\Calendars\Data;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Rushing\DataFilters\Attributes\Filterable;
 use Rushing\DataFilters\Attributes\Sortable;
 use Rushing\DataFilters\Operators\Exact;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
+use Splicewire\Beam\Authorization\RowAuthorization;
 use Splicewire\Beam\Calendars\Models\Calendar;
 use Splicewire\Beam\Data\BeamData;
 use Splicewire\Beam\Particle\Attributes\ParticleResource;
@@ -89,12 +88,19 @@ class CalendarData extends BeamData
         public int $seriesCount,
     ) {}
 
-    /** Own ∪ reach-visible calendars, through the cascade the model's attribute declares. */
+    /**
+     * Own ∪ reach-visible calendars, through the cascade the model's attribute declares.
+     *
+     * Rides {@see RowAuthorization} — the row plane of authorization as one named idiom
+     * (registry-kernel 72). This site previously called `Gate::getPolicyFor($model)->scopeForUser(…)`
+     * with no null check and so fataled at any host that binds no policy for the resolved model; the
+     * idiom fails CLOSED there instead.
+     */
     public static function scope(Builder $query): Builder
     {
         $model = config('beam.calendars.models.calendar', Calendar::class);
 
-        return Gate::getPolicyFor($model)->scopeForUser($query, Auth::user());
+        return RowAuthorization::apply($query, $model);
     }
 
     public static function project(Calendar $calendar): self

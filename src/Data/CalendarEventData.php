@@ -3,13 +3,12 @@
 namespace Splicewire\Beam\Calendars\Data;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Rushing\DataFilters\Attributes\Filterable;
 use Rushing\DataFilters\Attributes\Sortable;
 use Rushing\DataFilters\Operators\Exact;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
+use Splicewire\Beam\Authorization\RowAuthorization;
 use Splicewire\Beam\Calendars\Models\Calendar;
 use Splicewire\Beam\Calendars\Models\CalendarEvent;
 use Splicewire\Beam\Data\BeamData;
@@ -72,16 +71,22 @@ class CalendarEventData extends BeamData
         public ?string $recurrenceId,
     ) {}
 
-    /** Visible events are the events of visible calendars — nothing narrower, nothing wider. */
+    /**
+     * Visible events are the events of visible calendars — nothing narrower, nothing wider.
+     *
+     * The parent narrowing rides {@see RowAuthorization} — the row plane of authorization as one
+     * named idiom (registry-kernel 72). This site previously called
+     * `Gate::getPolicyFor($calendarModel)->scopeForUser(…)` with no null check and so fataled at any
+     * host that binds no policy for the resolved calendar model; the idiom fails CLOSED there
+     * instead, which for this `whereIn` subquery means an empty parent set and so no events.
+     */
     public static function scope(Builder $query): Builder
     {
         $calendarModel = config('beam.calendars.models.calendar', Calendar::class);
 
         return $query->whereIn(
             'calendar_id',
-            Gate::getPolicyFor($calendarModel)
-                ->scopeForUser($calendarModel::query(), Auth::user())
-                ->select('id'),
+            RowAuthorization::apply($calendarModel::query(), $calendarModel)->select('id'),
         );
     }
 
