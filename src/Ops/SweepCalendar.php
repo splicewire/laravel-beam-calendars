@@ -28,7 +28,6 @@ use Splicewire\Beam\Particle\OperationKind;
     resource: 'calendars',
     name: 'sweep',
     kind: OperationKind::Task,
-    model: Calendar::class,
     ability: 'update',
     input: SweepInputData::class,
     output: SweepResultData::class,

@@ -27,7 +27,6 @@ use Splicewire\Beam\Particle\OperationKind;
     resource: 'calendars',
     name: 'export',
     kind: OperationKind::Read,
-    model: Calendar::class,
     ability: 'view',
     input: HorizonInputData::class,
 )]

@@ -28,7 +28,6 @@ use Splicewire\Beam\Particle\OperationKind;
     resource: 'calendars',
     name: 'materialize',
     kind: OperationKind::Write,
-    model: Calendar::class,
     ability: 'update',
     input: MaterializeInputData::class,
     output: CalendarEventData::class,

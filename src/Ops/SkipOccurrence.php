@@ -27,7 +27,6 @@ use Splicewire\Beam\Particle\OperationKind;
     resource: 'calendars',
     name: 'skip',
     kind: OperationKind::Write,
-    model: Calendar::class,
     ability: 'update',
     input: SkipInputData::class,
     output: CalendarSeriesData::class,

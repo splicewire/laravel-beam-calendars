@@ -26,7 +26,6 @@ use Splicewire\Beam\Particle\OperationKind;
     resource: 'calendars',
     name: 'project',
     kind: OperationKind::Read,
-    model: Calendar::class,
     ability: 'view',
     input: HorizonInputData::class,
     output: ProjectedEventData::class,
