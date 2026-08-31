@@ -82,6 +82,36 @@ Multi-word? Add `#[MapName('snake_key')]` and an assertion in `WireNameTest`. Si
 to do — the mappers are identities on it. If you rename a property and a `WireNameTest` assertion
 moves, the attribute is missing; that is the test's whole job.
 
+## Checking your work — two instruments, two different questions
+
+Both landed after this package was swept, so nothing here was verified by them at the time. Use them
+on any future change.
+
+**`splicewire:beam:dev:wire-names`** (in `splicewire/laravel-beam-dev`, `require-dev`) — needs **two
+readings** and answers *"did this change move a published key?"*:
+
+```
+artisan splicewire:beam:dev:wire-names <src…> > before.txt
+# …rename properties, leaving every attribute argument untouched…
+artisan splicewire:beam:dev:wire-names <src…> > after.txt
+diff before.txt after.txt        # MUST be empty
+```
+
+**`beam.particle.undeclared-wire-name`** (a doctor audit in `splicewire/laravel-beam`, on
+`surgeon:audit`) — needs **one reading** and answers *"is this declaration coherent right now?"*. It
+reports two things: a property a configured global mapper would rewrite, and a class that declares
+**some** of its multi-word wire names but not others.
+
+⚠️ **The second one is what protects this package specifically.** Every property here is camelCase
+now, so a camel input mapper is the *identity* on them — meaning **deleting a `#[MapName]` moves that
+field's published key silently**, and the mapper-rewrites test cannot see it. The partial-declaration
+check can, because every multi-word property in these classes declares one. Measured 2026-08-28:
+removing a single `#[MapName]` from `ProjectedEventData` produced **no finding at all** until that
+check existed, and one finding naming the field afterwards.
+
+Neither instrument subsumes the other. A diff cannot judge a codebase it sees once; an audit cannot
+know what a key used to be.
+
 ## Estate context
 
 The wider cleanup is `api-surface-coherence` **issue 100** — 60 properties across 37 files that
