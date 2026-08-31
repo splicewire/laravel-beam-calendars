@@ -3,7 +3,6 @@
 namespace Splicewire\Beam\Calendars;
 
 use Rushing\PermissionCascade\Support\CascadePolicyRegistrar;
-use Rushing\Popcorn\Registries\RegistryIndex;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Splicewire\Beam\Calendars\Contracts\ChannelSource;
@@ -103,19 +102,6 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
         // for a host that wants the package to mount with its own prefix and middleware.
         if (config('beam.calendars.register_resources', true)) {
             Resources::declare();
-        }
-
-        // The three registries this package owns, described from the OWNER's own boot — a registry
-        // describes itself; nobody describes on another's behalf. Without this they resolve fine as
-        // classes and are INVISIBLE to `popcorn:registries`, which is the one place an operator
-        // looks to find out what a host can be extended with. Guarded because the index is
-        // popcorn's, and a host predating it still boots.
-        if ($this->app->bound(RegistryIndex::class)) {
-            $index = $this->app->make(RegistryIndex::class);
-
-            foreach ([EventKindRegistry::class, RendererRegistry::class, ChannelRegistry::class] as $registry) {
-                $index->describe($this->app->make($registry), by: self::class);
-            }
         }
 
         // Self-register into beam-core's install manifest so `splicewire:beam:install` publishes
