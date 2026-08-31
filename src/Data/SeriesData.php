@@ -3,6 +3,7 @@
 namespace Splicewire\Beam\Calendars\Data;
 
 use Schemastud\DataSchemas\Attributes\Description;
+use Schemastud\DataSchemas\Attributes\Keyword;
 use Schemastud\DataSchemas\Attributes\Title;
 use Schemastud\DataSchemas\Contracts\SchemaIdentity;
 use Spatie\LaravelData\Optional;
@@ -43,6 +44,20 @@ use Splicewire\Beam\Data\BeamData;
 class SeriesData extends BeamData implements SchemaIdentity
 {
     /**
+     * The host's date-picker hint, spelled out rather than imported.
+     *
+     * ⚠️ This is deliberate, not laziness. `Splicewire\Tower\Schema\Keywords::Widget` holds the same
+     * string, and beam-calendars may not reach for it — this package's composer.json states the rule in
+     * its own words: it "depends DOWN on beam-core + the data-schemas foundation and must never require
+     * the composition/tower/satellite tiers that are ADDITIVE to it." A literal keeps the DOWN edge.
+     *
+     * Emitting it here is what {@see Keyword} is for. Its docblock names `x-widget` as the example of a
+     * keyword the declaring package does not itself interpret: the schema states the hint, the host
+     * decides whether to honour it. Nothing in this package reads it.
+     */
+    private const WIDGET = 'x-widget';
+
+    /**
      * @param  list<array<string, mixed>>|Optional  $overrides
      */
     public function __construct(
@@ -52,11 +67,13 @@ class SeriesData extends BeamData implements SchemaIdentity
         public string $channel,
         #[Title('Starts on')]
         #[Description('The first occurrence date.')]
+        #[Keyword(self::WIDGET, 'date')]
         public string $anchor,
         public RecurrenceRuleData $rule,
         public SpawnData $spawn,
         #[Title('Expand until')]
         #[Description('Optional horizon the expander will not project past.')]
+        #[Keyword(self::WIDGET, 'date')]
         public ?string $window = null,
         public array|Optional $overrides = new Optional,
     ) {}
