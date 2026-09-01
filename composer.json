@@ -30,7 +30,7 @@
         "schemastud/laravel-data-schemas": "*",
         "spatie/laravel-data": "^4.0|^5.0",
         "spatie/laravel-package-tools": "^1.16",
-        "spatie/typescript-transformer": "^2.0|^3.0",
+        "spatie/typescript-transformer": "^3.0",
         "splicewire/laravel-beam": "*"
     },
     "require-dev": {
