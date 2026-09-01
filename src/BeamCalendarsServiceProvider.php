@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Calendars;
 
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Rushing\PermissionCascade\Support\CascadePolicyRegistrar;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -82,6 +83,31 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
         CascadePolicyRegistrar::register(Calendar::class);
         CascadePolicyRegistrar::register(CalendarEvent::class);
         CascadePolicyRegistrar::register(CalendarSeries::class);
+
+        // ⛔ The morph aliases for those same three models — ADR-0118, whose amended decision 5 is
+        // "registration follows ownership": the package that declares a model's policy registers that
+        // model's alias, from its own provider. This package declared three policies and shipped ZERO
+        // `morphMap()` calls, so all three were leaking their FQCN out of `getMorphClass()` and
+        // `PermissionNamer` was slugging it into `splicewirebeamcalendarsmodelscalendar.view` — the exact
+        // defect ADR-0118 exists to prevent. They were 3 of the 5 policied-but-unaliased models estate-wide.
+        //
+        // Additive (`morphMap($map, true)`), never `enforceMorphMap` — 20+ class-string morphs elsewhere in
+        // the estate would orphan, which `beam-particle-rename` 03 rejected explicitly and that rejection
+        // still stands.
+        //
+        // The keys are the SNAKE_CASE SHORT NAME of the class, not the table: these live on `beam_calendars`
+        // / `beam_calendar_events` / `beam_calendar_series`, and the `beam_` table prefix is not alias
+        // vocabulary. Measured against the estate's existing 106 aliases, where `EvidenceItem` on table
+        // `determination_evidence` is keyed `evidence_item`.
+        //
+        // Safe to add: zero live polymorphic rows store any of these three classes or these three keys
+        // (swept across all 827 `*_type` columns in 19 schemas), no subclass of any of them exists, and all
+        // three keys are free in the booted map.
+        Relation::morphMap([
+            'calendar' => Calendar::class,
+            'calendar_event' => CalendarEvent::class,
+            'calendar_series' => CalendarSeries::class,
+        ], true);
 
         // DECLARE the particle surface — registration only, never mounting. Guarded internally on the
         // beam particle infra, so this is a no-op in a headless env or the standalone package test.
