@@ -16,6 +16,8 @@ use Splicewire\Beam\Calendars\Registries\EventKindRegistry;
 use Splicewire\Beam\Calendars\Registries\RendererRegistry;
 use Splicewire\Beam\Doctor\BeamDoctorManifest;
 use Splicewire\Beam\Install\BeamInstallManifest;
+use Splicewire\Beam\Nav\NavSection;
+use Splicewire\Beam\Nav\NavSectionRegistry;
 
 /**
  * The calendar substrate: dated events, recurrence series, an exactly-once firing ledger, an ICS
@@ -145,6 +147,89 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
             $this->app->make(BeamDoctorManifest::class)->register(
                 'splicewire/laravel-beam-calendars',
                 BeamCalendarsMigrationsAudit::class,
+            );
+        }
+
+        $this->registerNavSection();
+    }
+
+    /**
+     * Seat this package's own `calendars` section — the half of its nav declaration that could not be
+     * written until {@see NavSectionRegistry} existed.
+     *
+     * ## What was broken
+     *
+     * {@see Data\CalendarData}, {@see Data\CalendarEventData} and {@see Data\CalendarSeriesData} have all
+     * declared `section: 'calendars'` since they were written. That says which section they attach UNDER;
+     * it cannot bring the section into being, and no host in the estate seats the string `calendars`. So
+     * all three were correctly declared and invisible — 3 of the 11 unseated sections measured across the
+     * family on 2026-09-05. The seat below is the missing half, and it is declarable HERE because it is a
+     * fact this package knows: the section's own key, label and icon are ours. Ordering stays advisory
+     * and the host may reorder or supersede it wholesale.
+     *
+     * The rule (api-surface-coherence 142): *"A fact is declarable when the declaring party is the one
+     * that knows it. When only the host can know it, a list is the honest form — and the list must
+     * compose."*
+     *
+     * ## Both realms, and that is not sloppiness
+     *
+     * Which realm the calendar resources live in is the HOST's `config/frame.realms` list, not this
+     * package's — the same beam-ux resources sit in `operator` at the flagship and in `tenant` at the
+     * beam starter, and this package ships no opinion either way. A package that guessed one realm would
+     * be invisible at every host that chose the other. Declaring both is safe because
+     * `FrameNavContribution` DROPS a contributed seat with no children, so the realm where these
+     * resources do not live renders nothing rather than a dead header.
+     *
+     * `user` is deliberately not among them: a calendar admin list is not an account-settings surface,
+     * and a seat nobody would want is not made harmless by being dropped.
+     *
+     * ## ⚠️ The key is `calendars`, plural, and renaming it to `calendar` was RULED AGAINST
+     *
+     * The flagship already has a `calendar` seat and it is a curated STANDALONE page
+     * (`~/Herd/splicewire-app/app/Frame/RouteContextBuilder.php:66`, `TENANT_STANDALONE`). Aligning the
+     * two strings would attach these three admin list rows INTO that page's seat — a silent
+     * regression at the one host that has a calendar surface today. The two words are two things.
+     *
+     * ## Ungated, written out
+     *
+     * `entitlement: null, permission: null` are passed explicitly because an omission and a decision must
+     * not be spelled the same. The seat carries no gate of its own: the resources under it are
+     * `viewAny`-gated one by one and an empty seat is dropped, so an unauthorized reader loses the
+     * section because its contents went — the same answer a seat-level gate gives, with one fewer place
+     * for the two to disagree.
+     *
+     * ⚠️ Gate vocabulary here is a permission token or beam-core's `entitlement:{key}` Gate plane, and
+     * nothing else. `Splicewire\Tower\Navigation\Gates\EntitlementNavGateStage` constructor-injects
+     * classes that are absent at a bare beam host, so naming it would turn a hidden seat into a
+     * container failure at nav-build time.
+     *
+     * `bound()`-guarded, exactly as the two manifest registrations above are: whether beam-core is new
+     * enough to bind the registry is a fact about the host, and such a check reports an absence rather
+     * than fataling a boot.
+     */
+    protected function registerNavSection(): void
+    {
+        if (! $this->app->bound(NavSectionRegistry::class)) {
+            return;
+        }
+
+        $sections = $this->app->make(NavSectionRegistry::class);
+
+        foreach (['operator', 'tenant'] as $realm) {
+            $sections->register(
+                new NavSection(
+                    key: 'calendars',
+                    realm: $realm,
+                    label: 'Calendars',
+                    icon: 'CalendarDays',
+                    href: '/calendars',
+                    // Between beam-ux's `authoring` (30) and `ops` (80) — calendars are content a
+                    // reader works in, not operations they supervise. Advisory: the host may reorder.
+                    order: 50,
+                    entitlement: null,
+                    permission: null,
+                ),
+                by: 'splicewire/laravel-beam-calendars',
             );
         }
     }
