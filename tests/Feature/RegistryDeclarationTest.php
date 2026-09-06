@@ -1,7 +1,6 @@
 <?php
 
 use Rushing\Popcorn\Laravel\PopcornManager;
-use Rushing\Popcorn\Registries\RegistryArity;
 use Splicewire\Beam\Calendars\Registries\ChannelRegistry;
 use Splicewire\Beam\Calendars\Registries\EventKindRegistry;
 use Splicewire\Beam\Calendars\Registries\RendererRegistry;
@@ -15,9 +14,7 @@ it('declares each registry with a domain-first, vendor-free dotted root', functi
 
     $declaration = app($class)->declaration();
 
-    expect((string) $declaration->rootKey())->toBe($root)
-        // Arity normalises to a LIST, outermost-first, even when declared bare.
-        ->and($declaration->arity)->toBe([RegistryArity::PickOne]);
+    expect((string) $declaration->rootKey())->toBe($root);
 })->with([
     [EventKindRegistry::class, 'beam.calendars.event_kinds'],
     [RendererRegistry::class, 'beam.calendars.renderers'],
@@ -31,6 +28,6 @@ it('routes a key to the registry that owns it', function () {
         ->and($popcorn->routeTo('beam.calendars.renderers.ics'))->not->toBeNull();
 });
 
-it('carries a note on every registry, because a bare root does not explain itself', function (string $class) {
-    expect(app($class)->declaration()->note)->not->toBeNull()->not->toBe('');
+it('describes the purpose of every registry, because a bare root does not explain itself', function (string $class) {
+    expect(app($class)->declaration()->description)->not->toBeNull()->not->toBe('');
 })->with([EventKindRegistry::class, RendererRegistry::class, ChannelRegistry::class]);

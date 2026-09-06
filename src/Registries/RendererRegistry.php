@@ -6,7 +6,6 @@ use Rushing\Popcorn\Laravel\Registries\ConfigRegistry;
 use Rushing\Popcorn\Registries\IsRegistry;
 use Rushing\Popcorn\Registries\OnDuplicate;
 use Rushing\Popcorn\Registries\Optionality;
-use Rushing\Popcorn\Registries\RegistryArity;
 use Splicewire\Beam\Calendars\Contracts\CalendarRenderer;
 
 /**
@@ -22,13 +21,10 @@ use Splicewire\Beam\Calendars\Contracts\CalendarRenderer;
  */
 #[IsRegistry(
     root: 'beam.calendars.renderers',
-    of: 'calendar export renderers, one per format token',
-    arity: RegistryArity::PickOne,
     entryType: 'class-string<'.CalendarRenderer::class.'>',
     onDuplicate: OnDuplicate::Supersede,
     optionality: Optionality::Optional,
-    note: 'The format token is the registry key and the advertised export format are the same '
-        .'string, so `exportFormats()` is derived from the registry rather than declared beside it.',
+    description: 'calendar export renderers, one per format token. The format token is the registry key and the advertised export format are the same string, so `exportFormats()` is derived from the registry rather than declared beside it.',
 )]
 class RendererRegistry extends ConfigRegistry
 {

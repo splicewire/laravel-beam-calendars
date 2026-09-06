@@ -6,7 +6,6 @@ use Rushing\Popcorn\Laravel\Registries\ConfigRegistry;
 use Rushing\Popcorn\Registries\IsRegistry;
 use Rushing\Popcorn\Registries\OnDuplicate;
 use Rushing\Popcorn\Registries\Optionality;
-use Rushing\Popcorn\Registries\RegistryArity;
 use Splicewire\Beam\Calendars\Contracts\ChannelSource;
 
 /**
@@ -23,13 +22,10 @@ use Splicewire\Beam\Calendars\Contracts\ChannelSource;
  */
 #[IsRegistry(
     root: 'beam.calendars.channels',
-    of: 'calendar delivery channels (lanes) — the lane id and its display metadata',
-    arity: RegistryArity::PickOne,
     entryType: 'array{label: string}',
     onDuplicate: OnDuplicate::Supersede,
     optionality: Optionality::Optional,
-    note: 'The `default` lane is a SEED, not a reserved name — a host may supersede it. An empty '
-        .'registry still answers `[default]`, because one lane is a document and zero is unusable.',
+    description: 'calendar delivery channels (lanes) — the lane id and its display metadata. The `default` lane is a SEED, not a reserved name — a host may supersede it. An empty registry still answers `[default]`, because one lane is a document and zero is unusable.',
 )]
 class ChannelRegistry extends ConfigRegistry implements ChannelSource
 {

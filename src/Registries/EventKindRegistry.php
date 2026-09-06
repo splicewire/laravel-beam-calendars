@@ -6,7 +6,6 @@ use Rushing\Popcorn\Laravel\Registries\ConfigRegistry;
 use Rushing\Popcorn\Registries\IsRegistry;
 use Rushing\Popcorn\Registries\OnDuplicate;
 use Rushing\Popcorn\Registries\Optionality;
-use Rushing\Popcorn\Registries\RegistryArity;
 use Splicewire\Beam\Data\BeamData;
 
 /**
@@ -32,21 +31,17 @@ use Splicewire\Beam\Data\BeamData;
  * construction, which is load-bearing here: tower registers in `boot()`, after this package's own
  * provider has already run, and a snapshot would freeze its kinds out with no error anywhere.
  *
- * ## `PickOne`, and entries are class-strings
+ * ## Keyed lookup of class-strings
  *
  * One kind key resolves to one payload class. Entries stay class-strings rather than instances so
  * a kind may declare constructor dependencies and be resolved through the container at use.
  */
 #[IsRegistry(
     root: 'beam.calendars.event_kinds',
-    of: 'calendar event kinds — the dotted kind key and the typed payload class each resolves to',
-    arity: RegistryArity::PickOne,
     entryType: 'class-string<'.BeamData::class.'>',
     onDuplicate: OnDuplicate::Supersede,
     optionality: Optionality::Optional,
-    note: 'Keys are the dotted kind verbatim (`kind.event`, `kind.run-circuit`). A registry MISS is '
-        .'the unknown-kind condition, which is why no participant needs a class_exists guard — and '
-        .'why tower can contribute kinds this package is forbidden to name.',
+    description: 'calendar event kinds — the dotted kind key and the typed payload class each resolves to. Keys are the dotted kind verbatim (`kind.event`, `kind.run-circuit`). A registry MISS is the unknown-kind condition, which is why no participant needs a class_exists guard — and why tower can contribute kinds this package is forbidden to name.',
 )]
 class EventKindRegistry extends ConfigRegistry
 {
