@@ -4,8 +4,8 @@ namespace Splicewire\Beam\Calendars\Registries;
 
 use Rushing\Popcorn\Laravel\Registries\ConfigRegistry;
 use Rushing\Popcorn\Registries\IsRegistry;
-use Rushing\Popcorn\Registries\OnDuplicate;
-use Rushing\Popcorn\Registries\Optionality;
+use Rushing\Popcorn\Registries\OnKeyDuplicate;
+use Rushing\Popcorn\Registries\PopulationRequirement;
 use Splicewire\Beam\Calendars\Contracts\CalendarRenderer;
 
 /**
@@ -22,8 +22,8 @@ use Splicewire\Beam\Calendars\Contracts\CalendarRenderer;
 #[IsRegistry(
     root: 'beam.calendars.renderers',
     entryType: 'class-string<'.CalendarRenderer::class.'>',
-    onDuplicate: OnDuplicate::Supersede,
-    optionality: Optionality::Optional,
+    onKeyDuplicate: OnKeyDuplicate::Supersede,
+    populationRequirement: PopulationRequirement::Optional,
     description: 'calendar export renderers, one per format token. The format token is the registry key and the advertised export format are the same string, so `exportFormats()` is derived from the registry rather than declared beside it.',
 )]
 class RendererRegistry extends ConfigRegistry

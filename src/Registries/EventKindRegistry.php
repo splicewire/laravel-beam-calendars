@@ -4,8 +4,8 @@ namespace Splicewire\Beam\Calendars\Registries;
 
 use Rushing\Popcorn\Laravel\Registries\ConfigRegistry;
 use Rushing\Popcorn\Registries\IsRegistry;
-use Rushing\Popcorn\Registries\OnDuplicate;
-use Rushing\Popcorn\Registries\Optionality;
+use Rushing\Popcorn\Registries\OnKeyDuplicate;
+use Rushing\Popcorn\Registries\PopulationRequirement;
 use Splicewire\Beam\Data\BeamData;
 
 /**
@@ -39,8 +39,8 @@ use Splicewire\Beam\Data\BeamData;
 #[IsRegistry(
     root: 'beam.calendars.event_kinds',
     entryType: 'class-string<'.BeamData::class.'>',
-    onDuplicate: OnDuplicate::Supersede,
-    optionality: Optionality::Optional,
+    onKeyDuplicate: OnKeyDuplicate::Supersede,
+    populationRequirement: PopulationRequirement::Optional,
     description: 'calendar event kinds — the dotted kind key and the typed payload class each resolves to. Keys are the dotted kind verbatim (`kind.event`, `kind.run-circuit`). A registry MISS is the unknown-kind condition, which is why no participant needs a class_exists guard — and why tower can contribute kinds this package is forbidden to name.',
 )]
 class EventKindRegistry extends ConfigRegistry
