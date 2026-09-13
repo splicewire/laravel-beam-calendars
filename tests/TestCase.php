@@ -99,6 +99,8 @@ abstract class TestCase extends Orchestra
             'create_calendar_series_table',
             'create_calendar_events_table',
             'create_calendar_firings_table',
+            'create_calendar_actions_table',
+            'create_calendar_action_attempts_table',
         ] as $stub) {
             (require __DIR__.'/../database/migrations/shared/'.$stub.'.php.stub')->up();
         }

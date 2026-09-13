@@ -3,14 +3,18 @@
 namespace Splicewire\Beam\Calendars;
 
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Gate;
 use Rushing\PermissionCascade\Support\CascadePolicyRegistrar;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Splicewire\Beam\Calendars\Actions\ActionPolicy;
 use Splicewire\Beam\Calendars\Contracts\ChannelSource;
 use Splicewire\Beam\Calendars\Doctor\BeamCalendarsMigrationsAudit;
 use Splicewire\Beam\Calendars\Models\Calendar;
+use Splicewire\Beam\Calendars\Models\CalendarAction;
 use Splicewire\Beam\Calendars\Models\CalendarEvent;
 use Splicewire\Beam\Calendars\Models\CalendarSeries;
+use Splicewire\Beam\Calendars\Registries\ActionHandlerRegistry;
 use Splicewire\Beam\Calendars\Registries\ChannelRegistry;
 use Splicewire\Beam\Calendars\Registries\EventKindRegistry;
 use Splicewire\Beam\Calendars\Registries\RendererRegistry;
@@ -24,10 +28,9 @@ use Splicewire\Beam\Nav\NavSectionRegistry;
  * and RSS export, and a declarative particle surface over all three — on beam-core, with no
  * composition engine, no scheduler vendor and no AI anywhere in the dependency graph.
  *
- * What an ENGINE adds sits behind two ports ({@see Contracts\SpawnDriver},
- * {@see ChannelSource}) and three registries, all of which this package seeds and none of which it
- * requires anyone to fill. A host with nothing bound has a complete, usable calendar; that is the
- * free tier, not a degraded mode.
+ * Informational calendars use the spawn and channel ports plus their kind/renderer registries.
+ * Executable actions add a separate transactional handler and trusted host-context port. Both
+ * extension paths are optional; a host with nothing bound still has a usable calendar.
  */
 class BeamCalendarsServiceProvider extends PackageServiceProvider
 {
@@ -42,7 +45,7 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
         //
         // They live under `database/migrations/shared/` — the fleet's shared-by-default ruling:
         // migrations and models are central/tenant AGNOSTIC unless explicitly determined otherwise
-        // and noted at the site. These four are deliberately agnostic, so a publish lands them in
+        // and noted at the site. These tables are deliberately agnostic, so a publish lands them in
         // the host's `database/migrations/shared/`, the path beam-tenancy's
         // registerSharedMigrationsPath() runs on BOTH passes.
         $package
@@ -53,17 +56,20 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
                 'shared/create_calendar_series_table',
                 'shared/create_calendar_events_table',
                 'shared/create_calendar_firings_table',
+                'shared/create_calendar_actions_table',
+                'shared/create_calendar_action_attempts_table',
             ]);
     }
 
     public function packageRegistered(): void
     {
-        // The three registries are singletons so that a late registration — an engine's provider
+        // The registries are scoped so that a late registration — an engine's provider
         // booting after this one — lands on the same instance every reader resolves. They are
         // ConfigRegistry subclasses, so they also read THROUGH to the config repository on every
         // read rather than snapshotting, which is the half that actually makes late registration
-        // visible; the singleton binding just avoids rebuilding them per resolve.
+        // visible; the scoped binding avoids rebuilding them per resolve within a request/job.
         $this->app->scoped(EventKindRegistry::class);
+        $this->app->scoped(ActionHandlerRegistry::class);
         $this->app->scoped(RendererRegistry::class);
         $this->app->scoped(ChannelRegistry::class);
 
@@ -149,6 +155,10 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
                 BeamCalendarsMigrationsAudit::class,
             );
         }
+
+        ActionResources::declare();
+        Gate::policy(CalendarAction::class, ActionPolicy::class);
+        Relation::morphMap(['calendar_action' => CalendarAction::class], true);
 
         $this->registerNavSection();
     }

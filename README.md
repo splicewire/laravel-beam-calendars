@@ -16,7 +16,7 @@ to as ICS, and sweep on a cron. Firings are claimed exactly once and announced a
 
 ## Tables
 
-Four, published (never auto-run), convergent, and shared-by-default so they run on both the central
+Published (never auto-run), convergent, and shared-by-default so they run on both the central
 and per-tenant passes:
 
 | table | holds |
@@ -25,6 +25,8 @@ and per-tenant passes:
 | `calendar_series` | one row per recurrence RULE, O(1) on disk however long it runs |
 | `calendar_events` | dated rows, including materialized series instances |
 | `calendar_firings` | the exactly-once ledger, unique on `(series_id, recurrence_id)` |
+| `calendar_actions` | revisioned dated intent with a tenant-scoped source identity |
+| `calendar_action_attempts` | stable execution identities and immutable completed outcomes |
 
 ## The particle surface
 
@@ -38,9 +40,18 @@ Resources `calendars`, `calendar-events`, `calendar-series`, plus five operation
 | `materialize` | Write | `update` |
 | `skip` | Write | `update` |
 
-Authorization is the models' own `#[UseCascadePolicy]` attributes — **no Policy class ships here.**
+The content resources use the models' `#[UseCascadePolicy]` attributes. Executable actions have a
+separate read policy scoped to the host-provided principal and tenant; mutations authorize through
+their registered handler.
+
+## Executable actions
+
+Optional handlers can execute dated actions with atomic local results, visible blocked/failed
+outcomes, revision checks and explicit idempotent retries. Existing informational events and
+Generate/Reference spawning retain their behavior. See [action setup and execution](docs/actions.md)
+for host context, particle mounting, opaque calendar associations and the transaction boundary.
 
 ## Extending it
 
-See `AGENTS.md` for the two ports and three registries, and for the handful of things that look like
+See `AGENTS.md` for extension ports and registries, and for the handful of things that look like
 tidying opportunities and are load-bearing instead.

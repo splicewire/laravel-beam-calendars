@@ -9,8 +9,7 @@ tiers that are additive to it.
 
 ## What an engine adds, and where
 
-Everything an engine contributes goes through **two ports and three registries**, all seeded here and
-none of them required to be filled. A host with nothing bound has a complete, usable calendar.
+Extensions use the ports and registries below; a host with nothing bound has a complete, usable calendar.
 
 - `Contracts\SpawnDriver` — what a due occurrence DOES. `null` (the default) still claims, records
   and announces the firing; only the consequence is bought separately. The driver is **pure** — it
@@ -22,6 +21,10 @@ none of them required to be filled. A host with nothing bound has a complete, us
   `kind.run-circuit` without this package being able to name tower at all.
 - `beam.calendars.renderers` — format token → renderer. Adding a format is a registration, not an edit.
 - `beam.calendars.channels` — the lane vocabulary, with a `default` seed.
+
+Before adding an executable action handler, mounting its particle operations, or scheduling its
+execution, read [action setup and transaction boundaries](docs/actions.md). `ActionHandler`,
+`ActionContextProvider` and `beam.calendars.action_handlers` are separate from the pure spawn port.
 
 ## Things that look like tidying and are not
 

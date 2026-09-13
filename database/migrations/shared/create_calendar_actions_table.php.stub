@@ -1,0 +1,85 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Rushing\SchemaConvergence\ConvergentTable;
+use Splicewire\Beam\Facades\Beam;
+
+/** Shared, connection-scoped calendar action persistence. Publish before enabling actions. */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        $schema = $this->currentSchema();
+
+        ConvergentTable::named($this->target())
+            ->existsUsing(fn (string $table): bool => $this->exists($schema, $table))
+            ->define(function (Blueprint $table): void {
+                $table->uuid('id')->primary();
+                $table->string('kind');
+                $table->string('status')->default('pending');
+                $table->unsignedInteger('revision')->default(1);
+                $table->unsignedInteger('attempt_number')->default(1);
+                $table->uuid('current_attempt_id');
+                $table->json('payload');
+                $table->string('intent_hash', 64);
+                $table->timestampTz('due_at', 6);
+                $table->string('timezone');
+                $table->string('principal');
+                $table->string('creator');
+                $table->string('tenant_token');
+                $table->string('calendar_id')->nullable()->index();
+                $table->uuid('series_id')->nullable()->index();
+                $table->string('recurrence_id')->nullable();
+                $table->string('origin')->nullable()->index();
+                $table->string('correlation_id')->nullable()->index();
+                $table->timestamps();
+                $table->index(['tenant_token', 'status', 'due_at'], 'calendar_actions_due');
+                $table->unique(['tenant_token', 'origin'], 'calendar_actions_origin');
+            })
+            ->assert();
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists($this->target());
+    }
+
+    private function target(): string
+    {
+        return Beam::tableFor('beam.calendars.tables.calendar_actions', 'calendar_actions');
+    }
+
+    /**
+     * Postgres only. On any other driver there is no `current_schema()` and no search_path for a
+     * central table to leak through, so there is nothing to disambiguate and null says so.
+     */
+    private function currentSchema(): ?string
+    {
+        return Schema::getConnection()->getDriverName() === 'pgsql'
+            ? DB::selectOne('select current_schema() as schema')->schema
+            : null;
+    }
+
+    /**
+     * ⚠️ The two branches are not interchangeable, and each is WRONG on the other's driver.
+     *
+     * On Postgres, `Schema::hasTable()` follows the tenant search_path and so reports a CENTRAL
+     * table as present inside a tenant schema — which would make the convergent guard skip creating
+     * the tenant's own copy. Hence the information_schema probe pinned to the current schema.
+     *
+     * On SQLite there is no information_schema at all, so that probe is not merely unnecessary but
+     * fatal. Keeping both branches is what lets this package's suite run the REAL migration stubs
+     * rather than a hand-built fixture schema that can quietly drift away from them.
+     */
+    private function exists(?string $schema, string $table): bool
+    {
+        if ($schema === null) {
+            return Schema::hasTable($table);
+        }
+
+        return DB::selectOne('select 1 from information_schema.tables where table_schema = ? and table_name = ?', [$schema, $table]) !== null;
+    }
+};

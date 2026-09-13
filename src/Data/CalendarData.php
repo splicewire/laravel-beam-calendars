@@ -17,8 +17,8 @@ use Splicewire\Beam\Particle\Attributes\ParticleResource;
  * The `calendars` particle resource — declarative read/write/hydrate.
  *
  * `scope` narrows to own ∪ reach-visible through the cascade policy the MODEL declares with
- * `#[UseCascadePolicy]`; there is no Policy class in this package for the gate to find, and that is
- * the design rather than an omission.
+ * `#[UseCascadePolicy]`; this content resource has no bespoke policy. Executable action records
+ * have a separate principal/tenant read policy.
  *
  * A non-empty `label` makes this resource FRAMED — it projects into Frame's admin manifest as well
  * as the REST surface. Both transports run the same ParticleWriter pipeline

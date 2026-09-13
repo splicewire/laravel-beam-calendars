@@ -28,6 +28,9 @@ return [
      */
     'spawn_driver' => null,
 
+    // Executable action kinds are separate from informational event kinds and SpawnDriver.
+    'action_handlers' => [],
+
     /*
      * The CHANNEL SOURCE PORT. `null` reads the `channels` registry below. A multi-tenant host
      * binds Contracts\ChannelSource to resolve lanes per tenant instead.

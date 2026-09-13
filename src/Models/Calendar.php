@@ -18,8 +18,8 @@ use Splicewire\Beam\Facades\Beam;
  * {@see HasVisibility} for share/publish through the cascade, {@see HasMorphUser} for
  * single-owner-via-morph-columns ownership.
  *
- * The attribute below is the ENTIRE authorization surface — no Policy class exists in this package
- * for this model, or for any of them. `create: true` is self-service calendar creation.
+ * The attribute below declares this content model's cascade policy. `create: true` is self-service
+ * calendar creation. Executable actions use their separate host-context read policy.
  */
 #[UseCascadePolicy(BaseModelPolicy::class, create: true)]
 class Calendar extends Model
