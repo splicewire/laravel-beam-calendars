@@ -75,7 +75,7 @@ class ActionScheduler
         $connection = $this->actions->connection($connection);
         $now = $now === null ? CarbonImmutable::now('UTC') : CarbonImmutable::instance($now)->utc();
         $candidates = CalendarAction::on($connection->getName())->where('tenant_token', $tenantToken)
-            ->where('status', 'pending')->where('due_at', '<=', $now->format('Y-m-d H:i:s.u'))->orderBy('due_at')->get(['id', 'revision']);
+            ->where('status', 'pending')->where('due_at', '<=', $now->format('Y-m-d H:i:s.uP'))->orderBy('due_at')->get(['id', 'revision']);
         $attempts = [];
 
         foreach ($candidates as $candidate) {

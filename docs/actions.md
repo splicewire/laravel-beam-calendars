@@ -110,3 +110,5 @@ deduplication and explicit retries. `CalendarActionSurfaceTest` mounts the real 
 checks the same behavior over HTTP. SQLite tests do not establish PostgreSQL worker contention;
 hosts requiring that control should exercise two connections and process-abort recovery against
 their isolated PostgreSQL database before enabling their scheduler.
+
+Database writes and due-sweep bounds retain an explicit UTC offset as well as microseconds. This prevents a PostgreSQL session timezone from reinterpreting a UTC instant as local wall time.
