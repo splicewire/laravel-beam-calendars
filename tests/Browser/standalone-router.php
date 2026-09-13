@@ -94,7 +94,17 @@ class FixtureRun
     public static function handle(Splicewire\Beam\Calendars\Models\CalendarAction $model, Illuminate\Http\Request $request, mixed $actor): Splicewire\Beam\Calendars\Data\CalendarActionRecordData
     {
         $input = FixtureRunData::from($request->all());
-        app(ActionScheduler::class)->run($model->id, 'tenant:test', Splicewire\Beam\Calendars\Actions\ActionInstant::parse($input->dueAt), expectedRevision: $model->revision);
+        $at = Splicewire\Beam\Calendars\Actions\ActionInstant::parse($input->dueAt);
+        $previousMutableClock = Carbon\Carbon::getTestNow();
+        $previousImmutableClock = Carbon\CarbonImmutable::getTestNow();
+        Carbon\Carbon::setTestNow($at);
+        Carbon\CarbonImmutable::setTestNow($at);
+        try {
+            app(ActionScheduler::class)->run($model->id, 'tenant:test', $at, expectedRevision: $model->revision);
+        } finally {
+            Carbon\Carbon::setTestNow($previousMutableClock);
+            Carbon\CarbonImmutable::setTestNow($previousImmutableClock);
+        }
 
         return Splicewire\Beam\Calendars\Data\CalendarActionRecordData::fromModel($model->fresh());
     }

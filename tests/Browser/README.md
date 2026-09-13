@@ -28,7 +28,8 @@ are mounted under `/api/beam`. Additional **fixture-only declared particle opera
 | `POST /api/beam/calendar-actions/fixture-transition` | `transition` | `WorkflowTransitionAttemptData` |
 
 `fixture-run` executes just that action at the supplied clock instant and captured current revision.
-A before-due request remains pending. To exercise blocked recovery, schedule `publish`, call the
+Both mutable and immutable Carbon clocks are pinned for that request and restored afterward, so
+started/completed timestamps use the same fixture clock. A before-due request remains pending. To exercise blocked recovery, schedule `publish`, call the
 legal `publish` transition first, then run the scheduled action: it is blocked by current marking.
 Call `unpublish`, use the real action `retry` operation with a new idempotency key, and run again.
 The earlier blocked attempt remains in the detail response. The normal HTTP surface still enforces
