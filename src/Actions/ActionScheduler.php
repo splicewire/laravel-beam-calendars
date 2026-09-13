@@ -4,6 +4,7 @@ namespace Splicewire\Beam\Calendars\Actions;
 
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\ConnectionInterface;
 use Splicewire\Beam\Calendars\Data\ActionResultData;
 use Splicewire\Beam\Calendars\Models\CalendarAction;
@@ -40,9 +41,12 @@ class ActionScheduler
                 // A savepoint ensures a failing/blocked handler cannot leave partial local writes.
                 $result = $connection->transaction(function () use ($action, $attempt, $connection): ActionResultData {
                     $handler = $this->handlers->handler($action->kind);
-                    $result = $handler === null
-                        ? new ActionResultData('failed', ['The execution handler for this action kind is unavailable.'])
-                        : $handler->execute($action, $attempt, $connection);
+                    if ($handler === null) {
+                        $result = new ActionResultData('failed', ['The execution handler for this action kind is unavailable.']);
+                    } else {
+                        $handler->authorize($action->toActionData(), new ActionContext($action->principal, $action->creator, $action->tenant_token), $connection);
+                        $result = $handler->execute($action, $attempt, $connection);
+                    }
 
                     if ($result->status !== 'applied') {
                         throw new ActionNotApplied($result);
@@ -52,6 +56,8 @@ class ActionScheduler
                 });
             } catch (ActionNotApplied $notApplied) {
                 $result = $notApplied->result;
+            } catch (AuthorizationException $exception) {
+                $result = new ActionResultData('blocked', ['The execution principal is no longer authorized.']);
             } catch (Throwable $exception) {
                 report($exception);
                 $result = new ActionResultData('failed', ['The action handler failed.'], ['exception' => $exception::class]);

@@ -7,8 +7,9 @@ workflow, composition or Circuit requirement; an optional adapter supplies those
 
 ## Install and mount
 
-Publish this package's migrations, including `create_calendar_actions_table` and
-`create_calendar_action_attempts_table`, through the host's normal Beam installation flow. They are
+Publish this package's migrations, including `create_calendar_actions_table`,
+`create_calendar_action_attempts_table` and `create_calendar_action_series_table`, through the host's
+normal Beam installation flow. They are
 shared, connection-scoped stubs; neither provider boot nor a calendar read runs them.
 
 Bind `Contracts\ActionContextProvider` in the host. Its `current()` returns an `Actions\ActionContext`
@@ -77,6 +78,18 @@ and is not unique. A replay with the same origin and canonical authored intent r
 action, including after completion. The authored-intent hash includes principal, creator and tenant;
 server preparation is not rerun on a matching replay, so completed subject changes cannot repin it.
 A different meaning under that origin is a conflict; edit the existing pending action explicitly.
+Origin itself is immutable during editing. `beam.calendars.reserved_action_origins` prevents public
+scheduling from claiming server adapter namespaces; this package reserves `action-series:`.
+Optional adapters append their own prefixes. Internal `ActionService::schedulePrepared()` accepts a
+persisted server-prepared template, still checks concrete subject authority, and skips only the
+preparation step. No public operation exposes that bypass.
+
+`ActionService::restorePreparedIntent(data, savedContext, connection)` is a narrower internal
+reconstitution seam for a host that already verified a durable, previously authorized source. It
+requires a stable origin and preserves that saved intent even if its handler or authority disappeared.
+It skips authoring admission and preparation, but grants no authority for effects: `ActionScheduler`
+always authorizes the stored context before calling `execute`, recording revoked authority as blocked
+and an absent handler as failed. Never expose this restoration method to request input.
 
 Pending edits and cancellation take the same row lock as execution and require `expected_revision`.
 Whichever transaction acquires the lock and commits first wins; the other reloads the current state
@@ -98,16 +111,86 @@ save vetoes throw; an inability to persist the receipt aborts the whole transact
 records the clock after the handler returns, rather than copying the sweep's initial instant.
 
 Materialization, projection, export and a host's read lens remain reads or placement operations;
-none invokes this scheduler. Recurring action templates are not part of this initial seam. A future
-recurrence adapter must retain occurrence identity and route pinned occurrences to their own due
-action, without treating materialization as execution or changing Generate/Reference spawning.
+none invokes this scheduler.
+
+## Recurring actions
+
+`CalendarActionSeries` stores a frozen generic action template, typed `RecurrenceRuleData`, optional
+window, occurrence overrides and host context. It is separate from the spawn-based `CalendarSeries`
+model. Both use `SeriesExpander::dates()` as their recurrence date authority; Generate/Reference
+`SeriesData`, `Occurrence`, `SpawnData` and the pure `SpawnDriver` keep their original contracts.
+There is no workflow or composition import in this recurrence layer.
+
+The initial `action.due_at` defines the first local date and wall time in `action.timezone`.
+Subsequent dates preserve that wall time using `ActionLocalTime`, shared with relative date adapters.
+During an autumn overlap the earlier instant wins. A spring gap shifts forward by the gap, preserving
+minutes (02:30 becomes 03:30 in a one-hour gap). UTC offsets and microseconds remain explicit when
+written to the database. COUNT includes skipped slots and does not extend the series to replace them.
+The inherited recurrence expansion ceiling is 5,000 generated instances; rules and views should use
+bounded windows appropriate to that limit.
+
+The handler prepares the template once at series authoring, including its definition pin. Each
+materialization checks live authority but retains that prepared template. Execution independently
+checks current subject facts and pins. A recurring transition against one fixed subject may therefore
+apply once and later block when that subject no longer permits it; recurrence never manufactures a
+fresh subject or silently selects another workflow version.
+
+Mount the optional action-series surface inside the same trusted host route group:
+
+```php
+Splicewire\Beam\Calendars\ActionSeriesResources::mount('calendar-action-series');
+```
+
+Resource index/show reads use the current principal and tenant, with exact `filter[calendar_id]`.
+The write resource remains disabled; operations declare their complete Data shapes:
+
+| Operation | Input | Output |
+| --- | --- | --- |
+| `POST calendar-action-series/schedule` | `ActionSeriesInputData`: `action`, `rule`, optional `window` | `CalendarActionSeriesData` |
+| `GET calendar-action-series/{id}/project` | `from`, `through` local dates | `ActionOccurrenceListData` |
+| `POST calendar-action-series/{id}/pin` | `expected_revision`, `recurrence_id` | `CalendarActionRecordData` |
+| `POST calendar-action-series/{id}/skip` | `expected_revision`, `recurrence_id` | `CalendarActionSeriesData` |
+| `POST calendar-action-series/{id}/replace` | `expected_revision`, `recurrence_id`, `action` | `CalendarActionRecordData` |
+| `POST calendar-action-series/{id}/cancel` | `expected_revision` | `CalendarActionSeriesData` |
+| `POST calendar-action-series/{id}/resume` | `expected_revision` | `CalendarActionSeriesData` |
+
+Each recurrence ID is the original local date from the rule, retained after a move. Its stable source
+origin is `action-series:<series-id>:<recurrence-id>`. Pinning creates one pending action and never
+executes it; repeated pins return that record. A pin alone does not change the template revision.
+Skip excludes one virtual slot, or cancels its pending pin; it cannot undo an applied result. Replace
+prepares a replacement for exactly one slot and can move its due date. Existing cancelled/applied
+records remain immutable. Skip and replace change the series revision. Once pinned, the normal action
+reschedule/cancel/retry operations address that one action; reschedule must retain its origin,
+series ID and recurrence ID. Cancelled occurrences never reappear as new pending actions.
+
+Series cancellation stops future materialization and cancels its pending action records in one
+transaction. It preserves applied, blocked and failed history. Explicit retry of a terminal blocked
+or failed action remains an action-level decision. The series has no bulk edit or automatic repinning
+operation: author a new series when the template itself needs a new definition or target.
+
+`ActionSeriesService::project()` merges virtual occurrences and stored actions within local dates,
+including pins moved in or out of the horizon. It writes nothing. `ActionSeriesService::sweep()`
+locks each active series, materializes due dates using stable source identity, then runs the existing
+`ActionScheduler` across the scoped tenant's pending actions. Existing pins execute at their own due
+instants even if their original recurrence date differs. Hosts should invoke this entry point when
+they need both recurring and one-off action delivery; reads never invoke it.
+
+A materialization error or unavailable authority/handler rolls back that series' new materializations
+to a savepoint and records visible `blocked` status plus blockers. Restoring the handler or authority
+alone does not restart it: `resume` explicitly changes the series back to active after authorization
+and a revision check. Resume does not retry any existing terminal action attempt. Those use their own
+explicit idempotent retry operation. A hard transaction abort leaves pending identities recoverable.
 
 ## Verification
 
 `composer test` runs the package's real migration stubs in SQLite. The action service tests cover
 transaction rollback, save vetoes, stale revisions, scoped reads/writes, precise due instants, origin
 deduplication and explicit retries. `CalendarActionSurfaceTest` mounts the real particle routes and
-checks the same behavior over HTTP. SQLite tests do not establish PostgreSQL worker contention;
+checks the same behavior over HTTP. Action-series tests cover frozen templates, COUNT/skip,
+pin/replace/move scope, cancellation history, DST, missing-handler resume and abort recovery. A
+[repeatable loopback fixture](../tests/Browser/README.md) runs the real optional workflow handler and
+particle HTTP surfaces without Tower/composition for portable UI browser checks. SQLite tests do not
+establish PostgreSQL worker contention;
 hosts requiring that control should exercise two connections and process-abort recovery against
 their isolated PostgreSQL database before enabling their scheduler.
 

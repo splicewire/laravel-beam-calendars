@@ -23,14 +23,16 @@ Extensions use the ports and registries below; a host with nothing bound has a c
 - `beam.calendars.channels` — the lane vocabulary, with a `default` seed.
 
 Before adding an executable action handler, mounting its particle operations, or scheduling its
-execution, read [action setup and transaction boundaries](docs/actions.md). `ActionHandler`,
+execution or extending recurrence, read [action setup and transaction boundaries](docs/actions.md). `ActionHandler`,
 `ActionContextProvider` and `beam.calendars.action_handlers` are separate from the pure spawn port.
 
 ## Things that look like tidying and are not
 
-- **`RecurrenceRuleData` and every `*InputData` use `T|Optional` with `= new Optional`, never
-  `?T = null`.** The nullable form cannot express "clear this" — an absent field and an explicit null
-  both arrive as `null`, so a write gate can set but never unset, silently, with a 200.
+- **Partial-update DTOs, including the existing calendar resource `*InputData`, use `T|Optional`
+  with `= new Optional`, never `?T = null`.** The nullable form cannot express "clear this" — an absent field and an explicit null
+  both arrive as `null`, so a write gate can set but never unset, silently, with a 200. Complete
+  action operation inputs declare required fields; their nullable defaults describe full input shapes,
+  not partial model updates. `RecurrenceRuleData` retains its existing Optional nested contract.
 - **`SeriesData::schemaName()` is `calendar/series`, singular**, even though the package is plural.
   Stored payloads reconcile forward on that exact string.
 - **`SpawnData` spells the reference `target_ref`, not `composition_id`.** A composition is a

@@ -24,13 +24,46 @@ class ActionService
 
     public function schedule(CalendarActionData $data, ActionContext $context, ?ConnectionInterface $connection = null): CalendarAction
     {
+        foreach (config('beam.calendars.reserved_action_origins', ['action-series:']) as $prefix) {
+            if ($data->origin !== null && str_starts_with($data->origin, $prefix)) {
+                throw ValidationException::withMessages(['origin' => 'This source origin is reserved for a server adapter.']);
+            }
+        }
+
+        return $this->scheduleIntent($data, $context, $connection, true);
+    }
+
+    /** @internal A persisted series already owns the prepared template; authorization still runs. */
+    public function schedulePrepared(CalendarActionData $data, ActionContext $context, ?ConnectionInterface $connection = null): CalendarAction
+    {
+        return $this->scheduleIntent($data, $context, $connection, false);
+    }
+
+    /**
+     * @internal Reconstitute intent from a host-verified durable source and trusted saved context.
+     * This is not request admission: the runner must authorize before any effects. Never mount it.
+     */
+    public function restorePreparedIntent(CalendarActionData $data, ActionContext $context, ConnectionInterface $connection): CalendarAction
+    {
+        if ($data->origin === null || trim($data->origin) === '') {
+            throw new InvalidArgumentException('Restored intent requires its stable durable source origin.');
+        }
+
+        return $this->scheduleIntent($data, $context, $connection, false, false);
+    }
+
+    private function scheduleIntent(CalendarActionData $data, ActionContext $context, ?ConnectionInterface $connection, bool $prepare, bool $authorize = true): CalendarAction
+    {
         $connection = $this->connection($connection);
         $intentHash = $this->intentHash($data, $context);
 
-        $schedule = function () use ($data, $context, $connection, $intentHash): CalendarAction {
-            $handler = $this->handlers->handler($data->kind)
-                ?? throw ValidationException::withMessages(['kind' => 'No execution handler is available for this action kind.']);
-            $handler->authorize($data, $context, $connection);
+        $schedule = function () use ($data, $context, $connection, $intentHash, $prepare, $authorize): CalendarAction {
+            $handler = $authorize || $prepare
+                ? ($this->handlers->handler($data->kind) ?? throw ValidationException::withMessages(['kind' => 'No execution handler is available for this action kind.']))
+                : null;
+            if ($authorize) {
+                $handler->authorize($data, $context, $connection);
+            }
 
             if ($data->origin !== null) {
                 $existing = CalendarAction::on($connection->getName())->where('tenant_token', $context->tenantToken)
@@ -41,7 +74,7 @@ class ActionService
                 }
             }
 
-            $prepared = $handler->prepare(clone $data, $context, $connection);
+            $prepared = $prepare ? $handler->prepare(clone $data, $context, $connection) : clone $data;
             $attributes = $this->attributes($prepared);
             $action = new CalendarAction;
             $action->setConnection($connection->getName());
@@ -89,6 +122,12 @@ class ActionService
             $action = $this->locked($id, $context, $connection);
             $this->authorize($action, $context, $connection);
             $this->expectRevision($action, $expectedRevision, ['pending']);
+            if ($data->origin !== $action->origin) {
+                throw new ActionConflict('An action keeps its source origin when edited.');
+            }
+            if ($action->series_id !== null && ($data->seriesId !== $action->series_id || $data->recurrenceId !== $action->recurrence_id || $data->origin !== $action->origin)) {
+                throw new ActionConflict('A recurring action keeps its source series, recurrence identity and origin when edited.');
+            }
             $handler = $this->handlers->handler($data->kind)
                 ?? throw ValidationException::withMessages(['kind' => 'No execution handler is available for this action kind.']);
             $handler->authorize($data, $context, $connection);

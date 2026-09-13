@@ -8,10 +8,12 @@ use Rushing\PermissionCascade\Support\CascadePolicyRegistrar;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Splicewire\Beam\Calendars\Actions\ActionPolicy;
+use Splicewire\Beam\Calendars\Actions\ActionSeriesPolicy;
 use Splicewire\Beam\Calendars\Contracts\ChannelSource;
 use Splicewire\Beam\Calendars\Doctor\BeamCalendarsMigrationsAudit;
 use Splicewire\Beam\Calendars\Models\Calendar;
 use Splicewire\Beam\Calendars\Models\CalendarAction;
+use Splicewire\Beam\Calendars\Models\CalendarActionSeries;
 use Splicewire\Beam\Calendars\Models\CalendarEvent;
 use Splicewire\Beam\Calendars\Models\CalendarSeries;
 use Splicewire\Beam\Calendars\Registries\ActionHandlerRegistry;
@@ -58,6 +60,7 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
                 'shared/create_calendar_firings_table',
                 'shared/create_calendar_actions_table',
                 'shared/create_calendar_action_attempts_table',
+                'shared/create_calendar_action_series_table',
             ]);
     }
 
@@ -86,8 +89,8 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
 
     public function packageBooted(): void
     {
-        // The models' #[UseCascadePolicy] attributes are the ENTIRE authorization surface — the
-        // registrar wires them onto the Gate. No Policy class ships in this package at all.
+        // Informational calendar models use cascade policy attributes. Executable action models
+        // use the separate host-context policies registered below.
         CascadePolicyRegistrar::register(Calendar::class);
         CascadePolicyRegistrar::register(CalendarEvent::class);
         CascadePolicyRegistrar::register(CalendarSeries::class);
@@ -157,6 +160,9 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
         }
 
         ActionResources::declare();
+        ActionSeriesResources::declare();
+        Gate::policy(CalendarActionSeries::class, ActionSeriesPolicy::class);
+        Relation::morphMap(['calendar_action_series' => CalendarActionSeries::class], true);
         Gate::policy(CalendarAction::class, ActionPolicy::class);
         Relation::morphMap(['calendar_action' => CalendarAction::class], true);
 

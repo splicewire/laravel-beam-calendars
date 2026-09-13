@@ -206,3 +206,31 @@ it('rolls back subject effects when a model observer vetoes recording the applie
         ->and($action->attempts->first()->status)->toBe('pending')
         ->and(Splicewire\Beam\Calendars\Tests\Fixtures\User::count())->toBe(0);
 });
+
+it('reserves durable source origins for internal adapters and preserves origin during edits', function () {
+    config(['beam.calendars.reserved_action_origins' => ['action-series:', 'transition:', 'composition-cell:']]);
+    config(['beam.calendars.action_handlers' => ['kind.local' => LocalActionHandler::class]]);
+    $service = app(ActionService::class);
+    $context = new ActionContext('editor:1', 'user:1', 'tenant:one');
+    $data = new CalendarActionData('kind.local', [], '2026-09-18T13:00:00Z', 'UTC');
+    foreach (['action-series:source:date', 'transition:fact:binding', 'composition-cell:cell:revision:1'] as $origin) {
+        $data->origin = $origin;
+        expect(fn () => $service->schedule($data, $context))->toThrow(Illuminate\Validation\ValidationException::class);
+    }
+    $data->origin = 'client-intent:1';
+    $action = $service->schedule($data, $context);
+    $changed = $action->toActionData();
+    $changed->origin = 'transition:stolen';
+    expect(fn () => $service->edit($action->id, 1, $changed, $context))->toThrow(Splicewire\Beam\Calendars\Actions\ActionConflict::class);
+});
+
+it('restores previously durable intent and records revoked authority before any effects', function () {
+    config(['beam.calendars.action_handlers' => ['kind.local' => LocalActionHandler::class]]);
+    $service = app(ActionService::class);
+    $context = new ActionContext('revoked:principal', 'user:creator', 'tenant:one');
+    $data = new CalendarActionData('kind.local', ['prepared' => true], '2026-09-18T13:00:00Z', 'UTC', origin: 'durable-source:1');
+    $action = $service->restorePreparedIntent($data, $context, DB::connection());
+    expect($service->restorePreparedIntent($data, $context, DB::connection())->id)->toBe($action->id);
+    $attempt = app(ActionScheduler::class)->run($action->id, 'tenant:one', \Carbon\CarbonImmutable::parse($data->dueAt));
+    expect($attempt->status)->toBe('blocked')->and($attempt->blockers)->not->toBeEmpty()->and(DB::table('users')->count())->toBe(0);
+});

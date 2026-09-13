@@ -27,6 +27,7 @@ and per-tenant passes:
 | `calendar_firings` | the exactly-once ledger, unique on `(series_id, recurrence_id)` |
 | `calendar_actions` | revisioned dated intent with a tenant-scoped source identity |
 | `calendar_action_attempts` | stable execution identities and immutable completed outcomes |
+| `calendar_action_series` | frozen action templates, recurrence rules and scoped occurrence overrides |
 
 ## The particle surface
 
@@ -46,7 +47,7 @@ their registered handler.
 
 ## Executable actions
 
-Optional handlers can execute dated actions with atomic local results, visible blocked/failed
+Optional handlers can execute one-off or recurring dated actions with atomic local results, visible blocked/failed
 outcomes, revision checks and explicit idempotent retries. Existing informational events and
 Generate/Reference spawning retain their behavior. See [action setup and execution](docs/actions.md)
 for host context, particle mounting, opaque calendar associations and the transaction boundary.

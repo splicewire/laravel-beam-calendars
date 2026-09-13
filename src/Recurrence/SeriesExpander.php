@@ -44,13 +44,35 @@ class SeriesExpander
      */
     public function expand(SeriesData $series, string $seriesRef, ?Carbon $horizonEnd = null): array
     {
-        $rule = $series->rule;
+        $occurrences = [];
+        foreach ($this->dates($series->anchor, $series->rule, $series->window, $horizonEnd) as $date) {
+            $recurrenceId = self::recurrenceId($date);
+            $spawn = self::resolveSpawn($series, $recurrenceId);
+            if ($spawn !== null) {
+                $occurrences[] = new Occurrence(
+                    channel: $series->channel, anchor: $date->toDateString(),
+                    recurrenceId: $recurrenceId, seriesRef: $seriesRef, spawn: $spawn,
+                );
+            }
+        }
+
+        return $occurrences;
+    }
+
+    /**
+     * Shared date authority for spawn and action series. Exclusions are applied AFTER generation,
+     * so skipped dates still consume COUNT. No payload, persistence or execution is involved.
+     *
+     * @return list<Carbon>
+     */
+    public function dates(string $anchor, RecurrenceRuleData $rule, ?string $window = null, ?Carbon $horizonEnd = null): array
+    {
         $interval = max(1, $this->optionalInt($rule->interval, 1));
         $count = $this->optionalInt($rule->count, 0);
         $byday = $this->byday($rule);
 
-        $start = Carbon::parse($series->anchor)->startOfDay();
-        $end = $this->effectiveEnd($series, $horizonEnd);
+        $start = Carbon::parse($anchor)->startOfDay();
+        $end = $this->effectiveEnd($rule, $window, $horizonEnd);
 
         if ($end === null && $count <= 0) {
             throw new InvalidArgumentException(
@@ -74,28 +96,7 @@ class SeriesExpander
                     return $occurrences;
                 }
 
-                $recurrenceId = self::recurrenceId($date);
-                $spawn = self::resolveSpawn($series, $recurrenceId);
-
-                // A `skip` override (EXDATE) drops the Occurrence entirely — it is not
-                // projected and the Scheduler never fires it. It still counts against a
-                // `count`-bounded rule (RFC-5545: an excluded instance is still generated
-                // then removed), so bump the counter without emitting.
-                if ($spawn === null) {
-                    if ($count > 0 && ++$emitted >= $count) {
-                        return $occurrences;
-                    }
-
-                    continue;
-                }
-
-                $occurrences[] = new Occurrence(
-                    channel: $series->channel,
-                    anchor: $date->toDateString(),
-                    recurrenceId: $recurrenceId,
-                    seriesRef: $seriesRef,
-                    spawn: $spawn,
-                );
+                $occurrences[] = $date;
 
                 if ($count > 0 && ++$emitted >= $count) {
                     return $occurrences;
@@ -217,15 +218,15 @@ class SeriesExpander
         };
     }
 
-    private function effectiveEnd(SeriesData $series, ?Carbon $horizonEnd): ?Carbon
+    private function effectiveEnd(RecurrenceRuleData $rule, ?string $window, ?Carbon $horizonEnd): ?Carbon
     {
         $candidates = [];
 
-        if (! $series->rule->until instanceof Optional) {
-            $candidates[] = Carbon::parse((string) $series->rule->until)->endOfDay();
+        if (! $rule->until instanceof Optional) {
+            $candidates[] = Carbon::parse((string) $rule->until)->endOfDay();
         }
-        if ($series->window !== null) {
-            $candidates[] = Carbon::parse($series->window)->endOfDay();
+        if ($window !== null) {
+            $candidates[] = Carbon::parse($window)->endOfDay();
         }
         if ($horizonEnd !== null) {
             $candidates[] = $horizonEnd->copy();

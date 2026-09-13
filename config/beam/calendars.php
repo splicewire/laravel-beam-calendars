@@ -31,6 +31,9 @@ return [
     // Executable action kinds are separate from informational event kinds and SpawnDriver.
     'action_handlers' => [],
 
+    // Source namespaces owned by server adapters; public action scheduling cannot claim them.
+    'reserved_action_origins' => ['action-series:'],
+
     /*
      * The CHANNEL SOURCE PORT. `null` reads the `channels` registry below. A multi-tenant host
      * binds Contracts\ChannelSource to resolve lanes per tenant instead.
