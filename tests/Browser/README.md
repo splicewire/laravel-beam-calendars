@@ -41,6 +41,18 @@ For a CLI due sweep using the real current time:
 XDEBUG_MODE=off herd php tests/Browser/standalone-router.php tick
 ```
 
+The file-backed standalone process proof exercises the same fixture in separate PHP processes. It
+kills a worker at the pre-commit barrier, verifies the action remains pending, reruns it, and then
+invokes the same action again to prove duplicate execution leaves one applied attempt:
+
+```sh
+XDEBUG_MODE=off herd php tests/Browser/standalone-process-proof.php
+```
+
+The proof deliberately uses SQLite for the standalone fixture. It establishes crash recovery and
+durable duplicate identity for the free package; PostgreSQL worker contention remains a host-level
+acceptance check.
+
 Fixture context is intentionally fixed to `user:editor`, creator `user:creator`, and `tenant:test`.
 Production hosts must bind their own authenticated context and authority. The fixture creates its
 SQLite schema from real package migration stubs and uses the workflow test harness's definition

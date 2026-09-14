@@ -158,7 +158,40 @@ Illuminate\Support\Facades\Route::prefix('api/beam')->group(function () {
     Splicewire\Beam\Calendars\ActionSeriesResources::mount();
 });
 if (PHP_SAPI === 'cli') {
-    if (($argv[1] ?? '') === 'tick') {
+    if (($argv[1] ?? '') === 'schedule') {
+        $action = app(Splicewire\Beam\Calendars\Actions\ActionService::class)->schedule(
+            new Splicewire\Beam\Calendars\Data\CalendarActionData(
+                'kind.workflow-transition',
+                ['subject_kind' => 'article', 'subject_id' => '1', 'transition' => 'publish'],
+                '2026-09-18T13:00:00Z', 'UTC', origin: 'standalone-proof:'.bin2hex(random_bytes(4)),
+            ),
+            new ActionContext('user:editor', 'user:creator', 'tenant:test'),
+        );
+        echo json_encode(['action_id' => $action->id], JSON_THROW_ON_ERROR)."\n";
+    } elseif (($argv[1] ?? '') === 'run') {
+        $actionId = $argv[2] ?? throw new InvalidArgumentException('Missing action id.');
+        $mode = $argv[3] ?? 'normal';
+        $marker = $argv[4] ?? null;
+        if ($mode === 'before-commit') {
+            if ($marker === null) {
+                throw new InvalidArgumentException('A marker is required for before-commit mode.');
+            }
+            Splicewire\Beam\Workflows\Control\WorkflowTransitionFact::created(function () use ($marker): void {
+                file_put_contents($marker, (string) getmypid());
+                while (! file_exists($marker.'.release')) {
+                    usleep(10000);
+                }
+            });
+        }
+        $attempt = app(ActionScheduler::class)->run($actionId, 'tenant:test', Carbon\CarbonImmutable::parse('2026-09-18T13:00:00Z'));
+        echo json_encode(['status' => $attempt?->status], JSON_THROW_ON_ERROR)."\n";
+    } elseif (($argv[1] ?? '') === 'inspect') {
+        $action = Splicewire\Beam\Calendars\Models\CalendarAction::findOrFail($argv[2] ?? '');
+        echo json_encode([
+            'status' => $action->status, 'attempts' => $action->attempts()->count(),
+            'article_status' => StandaloneArticle::findOrFail(1)->status,
+        ], JSON_THROW_ON_ERROR)."\n";
+    } elseif (($argv[1] ?? '') === 'tick') {
         $attempts = app(Splicewire\Beam\Calendars\Actions\ActionSeriesService::class)->sweep('tenant:test', Carbon\CarbonImmutable::now('UTC'));
         echo json_encode(['attempts' => array_map(fn ($a) => ['id' => $a->id, 'status' => $a->status], $attempts), 'article_status' => StandaloneArticle::find(1)->status], JSON_PRETTY_PRINT)."\n";
     } else {
