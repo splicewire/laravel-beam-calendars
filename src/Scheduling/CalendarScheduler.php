@@ -140,16 +140,19 @@ class CalendarScheduler
     }
 
     /**
-     * Postgres `23505` and SQLite `19` are the fleet's two drivers. Matching on the SQLSTATE rather
-     * than on the message text keeps this working when the message is localised or reworded — and
-     * a violation that is NOT a uniqueness one must still surface, so this is a narrow test, not a
-     * blanket catch.
+     * Postgres reports unique claims as `23505`. SQLite reports all integrity failures as `23000`,
+     * so its message must also name a UNIQUE or PRIMARY KEY constraint before it can mean that
+     * another process won. Foreign-key and CHECK failures must still surface to the caller.
      */
     private function isUniqueViolation(QueryException $e): bool
     {
-        return in_array((string) ($e->errorInfo[0] ?? ''), ['23505', '23000'], true)
-            || str_contains(strtolower($e->getMessage()), 'unique constraint')
-            || str_contains(strtolower($e->getMessage()), 'unique violation');
+        $state = (string) ($e->errorInfo[0] ?? '');
+        $message = strtolower($e->getMessage());
+
+        return $state === '23505'
+            || str_contains($message, 'unique constraint')
+            || str_contains($message, 'unique violation')
+            || str_contains($message, 'primary key constraint');
     }
 
     /**

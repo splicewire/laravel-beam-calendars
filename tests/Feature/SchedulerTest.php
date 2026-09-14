@@ -127,6 +127,16 @@ it('resolves no driver by default, which is the free tier and not an error', fun
     expect(app(SpawnDriverResolver::class)->resolve())->toBeNull();
 });
 
+it('does not misclassify SQLite foreign-key integrity failures as duplicate claims', function () {
+    $exception = new Illuminate\Database\QueryException(
+        'sqlite', 'insert into calendar_firings', [], new RuntimeException('SQLSTATE[23000]: Integrity constraint violation: 19 FOREIGN KEY constraint failed'),
+    );
+    $method = new ReflectionMethod(CalendarScheduler::class, 'isUniqueViolation');
+    $method->setAccessible(true);
+
+    expect($method->invoke(app(CalendarScheduler::class), $exception))->toBeFalse();
+});
+
 it('resolves a class-string through the container so a driver can have dependencies', function () {
     config(['beam.calendars.spawn_driver' => FakeSpawnDriver::class]);
 
