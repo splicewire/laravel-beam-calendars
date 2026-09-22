@@ -19,7 +19,6 @@ use Splicewire\Beam\Particle\Attributes\ParticleResource;
     backing: CalendarAction::class,
     data: CalendarActionRecordData::class,
     input: false,
-    filterable: true,
     readOnly: true,
     editable: false,
     deletable: false,

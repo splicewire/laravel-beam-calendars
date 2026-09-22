@@ -24,15 +24,7 @@ use Splicewire\Beam\Particle\Attributes\ParticleResource;
  * as the REST surface. Both transports run the same ParticleWriter pipeline
  * (validate → authorize → persist → emit), so the admin edit and the REST call cannot diverge.
  *
- * The list facets are declared HERE, on the properties, rather than in a query class: `filterable`
- * on the attribute is what makes data-filters generate the index query, and the generated
- * ResourceQuery needs no body at all unless a `baseQuery()` is genuinely required.
- *
- * ⚠️ `filterable: true` requires a data-filters REGISTRATION to actually produce that query —
- * `config/data-filters.php`, `#[ResourceFilter]` discovery, or `DataFilter::resource()`. The
- * attribute alone is a declaration of intent, not the wiring. Measured at the flagship
- * 2026-08-29: `GET /api/v1/calendars` is a live 500 for exactly this reason ("No data-filters
- * resource is registered under [calendars]"), and the same holds for the two sibling resources.
+ * Filter controls derive from the declared vocabulary. Resource scopes apply to all reads.
  *
  * ⚠️ Every facet here is `Exact::class`, declared explicitly. These three DTOs shipped with a
  * BARE `#[Filterable]`, which has never been legal — `Filterable::__construct()` has required the
@@ -51,7 +43,6 @@ use Splicewire\Beam\Particle\Attributes\ParticleResource;
     backing: Calendar::class,
     data: self::class,
     input: CalendarInputData::class,
-    filterable: true,
     label: 'Calendars',
     singularLabel: 'Calendar',
     group: 'Calendars',

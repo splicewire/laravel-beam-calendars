@@ -30,7 +30,6 @@ use Splicewire\Beam\Particle\Attributes\ParticleResource;
     backing: CalendarEvent::class,
     data: self::class,
     input: CalendarEventInputData::class,
-    filterable: true,
     label: 'Calendar events',
     singularLabel: 'Calendar event',
     group: 'Calendars',
