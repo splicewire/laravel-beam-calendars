@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Calendars\Data;
 
+use Schemastud\DataSchemas\Attributes\Description;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Optional;
 use Splicewire\Beam\Data\BeamData;
@@ -33,16 +34,24 @@ class CalendarEventInputData extends BeamData implements MapsToModelAttributes
      */
     public function __construct(
         #[MapName('calendar_id')]
+        #[Description('Calendar that contains this stored event.')]
         public string|Optional $calendarId = new Optional,
+        #[Description('Registered calendar lane used to group and display this event.')]
         public string|Optional $channel = new Optional,
+        #[Description('Registered event kind whose schema validates the accompanying payload.')]
         public string|Optional $kind = new Optional,
+        #[Description('Calendar date on which this stored event appears.')]
         public string|Optional $anchor = new Optional,
+        #[Description('Event content matching the schema registered for its kind.')]
         public array|Optional $payload = new Optional,
+        #[Description('Stored event status; send null to clear it.')]
         public string|null|Optional $status = new Optional,
         /** Set only when pinning an instance of a series — see the projection's supersession rule. */
         #[MapName('series_id')]
+        #[Description('Source series when this event pins one of its occurrences; send null to detach the reference.')]
         public string|null|Optional $seriesId = new Optional,
         #[MapName('recurrence_id')]
+        #[Description('Occurrence identity superseded by this pinned event; send null to clear it.')]
         public string|null|Optional $recurrenceId = new Optional,
     ) {}
 

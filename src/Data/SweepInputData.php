@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Calendars\Data;
 
+use Schemastud\DataSchemas\Attributes\Description;
 use Spatie\LaravelData\Optional;
 use Splicewire\Beam\Data\BeamData;
 
@@ -19,6 +20,7 @@ use Splicewire\Beam\Data\BeamData;
 class SweepInputData extends BeamData
 {
     public function __construct(
+        #[Description('Instant through which due occurrences are swept; omission or null uses the current time.')]
         public string|null|Optional $at = new Optional,
     ) {}
 }

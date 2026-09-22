@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Calendars\Data;
 
+use Schemastud\DataSchemas\Attributes\Description;
 use Spatie\LaravelData\Optional;
 use Splicewire\Beam\Data\BeamData;
 use Splicewire\Beam\Write\Contracts\MapsToModelAttributes;
@@ -33,9 +34,13 @@ use Splicewire\Beam\Write\Contracts\MapsToModelAttributes;
 class CalendarInputData extends BeamData implements MapsToModelAttributes
 {
     public function __construct(
+        #[Description('Display name of the calendar.')]
         public string|Optional $title = new Optional,
+        #[Description('Readable identifier used to address or distinguish this calendar.')]
         public string|Optional $slug = new Optional,
+        #[Description('Timezone used for this calendar.')]
         public string|Optional $timezone = new Optional,
+        #[Description('Visibility label stored on the calendar; send null to clear it.')]
         public string|null|Optional $visibility = new Optional,
     ) {}
 

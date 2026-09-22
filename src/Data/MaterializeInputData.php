@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Calendars\Data;
 
+use Schemastud\DataSchemas\Attributes\Description;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Optional;
 use Splicewire\Beam\Data\BeamData;
@@ -22,10 +23,14 @@ class MaterializeInputData extends BeamData
 {
     public function __construct(
         #[MapName('series_id')]
+        #[Description('Series containing the occurrence to pin as a stored event.')]
         public string $seriesId,
         #[MapName('recurrence_id')]
+        #[Description('Occurrence identity from the expanded series.')]
         public string $recurrenceId,
+        #[Description('Date for the pinned event; omission or null keeps the computed occurrence date.')]
         public string|null|Optional $anchor = new Optional,
+        #[Description('Title override for the pinned event, when supplied.')]
         public string|null|Optional $title = new Optional,
     ) {}
 }

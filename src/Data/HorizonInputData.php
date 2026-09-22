@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Calendars\Data;
 
+use Schemastud\DataSchemas\Attributes\Description;
 use Spatie\LaravelData\Optional;
 use Splicewire\Beam\Calendars\Projection\Horizon;
 use Splicewire\Beam\Data\BeamData;
@@ -23,7 +24,9 @@ use Splicewire\Beam\Data\BeamData;
 class HorizonInputData extends BeamData
 {
     public function __construct(
+        #[Description('First date of the requested projection window; omission uses the configured default span relative to the other edge.')]
         public string|Optional $from = new Optional,
+        #[Description('Last date of the requested projection window; omission uses the configured default span relative to the other edge.')]
         public string|Optional $to = new Optional,
     ) {}
 

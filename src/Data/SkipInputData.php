@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Calendars\Data;
 
+use Schemastud\DataSchemas\Attributes\Description;
 use Spatie\LaravelData\Attributes\MapName;
 use Splicewire\Beam\Data\BeamData;
 
@@ -20,8 +21,10 @@ class SkipInputData extends BeamData
 {
     public function __construct(
         #[MapName('series_id')]
+        #[Description('Series containing the occurrence to omit.')]
         public string $seriesId,
         #[MapName('recurrence_id')]
+        #[Description('Occurrence identity from the expanded series to mark as skipped.')]
         public string $recurrenceId,
     ) {}
 }

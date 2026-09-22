@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Calendars\Data;
 
+use Schemastud\DataSchemas\Attributes\Description;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Optional;
 use Splicewire\Beam\Data\BeamData;
@@ -31,12 +32,19 @@ class CalendarSeriesInputData extends BeamData implements MapsToModelAttributes
      */
     public function __construct(
         #[MapName('calendar_id')]
+        #[Description('Calendar in which the recurring events appear.')]
         public string|Optional $calendarId = new Optional,
+        #[Description('Registered calendar lane used for occurrences of this series.')]
         public string|Optional $channel = new Optional,
+        #[Description('Start date from which the recurrence rule is expanded.')]
         public string|Optional $anchor = new Optional,
+        #[Description('Recurrence rule that selects the dates in this series.')]
         public RecurrenceRuleData|Optional $rule = new Optional,
+        #[Description('Event content or target reference produced for each occurrence.')]
         public SpawnData|Optional $spawn = new Optional,
+        #[Description('Last date through which this series may be expanded; send null to remove this bound.')]
         public string|null|Optional $window = new Optional,
+        #[Description('Occurrence overrides identified by recurrence_id, with skip or replace actions and optional replacement spawn content.')]
         public array|Optional $overrides = new Optional,
     ) {}
 
