@@ -16,7 +16,7 @@ use Splicewire\Beam\Particle\OperationKind;
     resource: 'calendar-action-series',
     name: 'cancel',
     kind: OperationKind::Write,
-    ability: null,
+    ability: false,
     input: ActionRevisionData::class,
     output: CalendarActionSeriesData::class,
 )]

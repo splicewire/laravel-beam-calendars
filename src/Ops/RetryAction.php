@@ -16,7 +16,7 @@ use Splicewire\Beam\Particle\OperationKind;
     resource: 'calendar-actions',
     name: 'retry',
     kind: OperationKind::Write,
-    ability: null,
+    ability: false,
     input: RetryActionData::class,
     output: CalendarActionAttemptData::class,
 )]

@@ -16,7 +16,7 @@ use Splicewire\Beam\Particle\OperationKind;
     resource: 'calendar-actions',
     name: 'reschedule',
     kind: OperationKind::Write,
-    ability: null,
+    ability: false,
     input: RescheduleActionData::class,
     output: CalendarActionRecordData::class,
 )]

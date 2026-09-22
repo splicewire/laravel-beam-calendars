@@ -16,7 +16,7 @@ use Splicewire\Beam\Particle\OperationKind;
     resource: 'calendar-action-series',
     name: 'pin',
     kind: OperationKind::Write,
-    ability: null,
+    ability: false,
     input: ActionOccurrenceInputData::class,
     output: CalendarActionRecordData::class,
 )]

@@ -1,7 +1,16 @@
 <?php
 
 use Splicewire\Beam\Calendars\Resources;
+use Splicewire\Beam\Particle\Attributes\UngatedWriteDeclarations;
 use Splicewire\Beam\Particle\ParticleResourceRegistry;
+
+it('declares authorization for every attributed write operation', function () {
+    $found = UngatedWriteDeclarations::in(__DIR__.'/../../src');
+
+    expect($found->scanned)->toBeGreaterThan(0)
+        ->and($found->unloadable)->toBe([])
+        ->and($found->offenders)->toBe([], $found->message());
+});
 
 /**
  * ⚠️ Registration must NOT depend on routing.

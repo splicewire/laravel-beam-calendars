@@ -16,7 +16,7 @@ use Splicewire\Beam\Particle\OperationKind;
     resource: 'calendar-action-series',
     name: 'replace',
     kind: OperationKind::Write,
-    ability: null,
+    ability: false,
     input: ReplaceActionOccurrenceData::class,
     output: CalendarActionRecordData::class,
 )]

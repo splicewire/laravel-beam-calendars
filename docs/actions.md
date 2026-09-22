@@ -40,9 +40,11 @@ Writes use declared operations; raw resource create, update and delete are not m
 | `POST calendar-actions/{id}/cancel` | `expected_revision` | `CalendarActionRecordData` |
 | `POST calendar-actions/{id}/retry` | `expected_revision`, `due_at`, `idempotency_key` | `CalendarActionAttemptData` |
 
-The operation's `ability: null` is deliberate: `ActionService` authorizes the concrete requested
-subject through its handler, inside the transaction. Rescheduling authorizes both the existing and
-replacement subject. Resource reads separately use the principal/tenant scope and read policy.
+Action and action-series operations declare `ability: false`: they decline an additional generic
+ability check because `ActionService` and `ActionSeriesService` authorize the concrete requested
+subject through its handler, inside the transaction. This does not grant subject authority.
+Rescheduling and occurrence replacement authorize both the original and replacement subjects.
+Resource reads separately use the principal/tenant scope and read policy.
 Never expose the model through an unrestricted generic write mount.
 
 ## Handler contract

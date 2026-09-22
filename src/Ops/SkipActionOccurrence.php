@@ -16,7 +16,7 @@ use Splicewire\Beam\Particle\OperationKind;
     resource: 'calendar-action-series',
     name: 'skip',
     kind: OperationKind::Write,
-    ability: null,
+    ability: false,
     input: ActionOccurrenceInputData::class,
     output: CalendarActionSeriesData::class,
 )]

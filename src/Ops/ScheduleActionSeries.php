@@ -16,7 +16,7 @@ use Splicewire\Beam\Particle\OperationKind;
     name: 'schedule',
     subject: \Splicewire\Beam\Particle\Subject\NoSubject::class,
     kind: OperationKind::Write,
-    ability: null,
+    ability: false,
     input: ActionSeriesInputData::class,
     output: CalendarActionSeriesData::class,
 )]
