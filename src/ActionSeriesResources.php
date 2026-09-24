@@ -12,6 +12,7 @@ use Splicewire\Beam\Calendars\Ops\ScheduleActionSeries;
 use Splicewire\Beam\Calendars\Ops\SkipActionOccurrence;
 use Splicewire\Beam\Facades\Particle;
 use Splicewire\Beam\Particle\Attributes\AttributedParticleDiscovery;
+use Splicewire\Beam\Particle\ParticleResourceRegistry;
 
 class ActionSeriesResources
 {
@@ -26,7 +27,10 @@ class ActionSeriesResources
     /** Call inside the host's authenticated tenant route group, after binding ActionContextProvider. */
     public static function mount(string $uri = 'calendar-action-series'): void
     {
-        self::declare();
+        // Declared at boot by the provider; re-declaring at mount time only adds a supersession record.
+        if (! app(ParticleResourceRegistry::class)->has('calendar-action-series')) {
+            self::declare();
+        }
         Particle::ops($uri, 'calendar-action-series', [ScheduleActionSeries::class, PinActionOccurrence::class, SkipActionOccurrence::class, ReplaceActionOccurrence::class, CancelActionSeries::class, ResumeActionSeries::class, ProjectActionSeries::class]);
         Particle::mount($uri, 'calendar-action-series')->only(['index', 'show'])->idConstraint('uuid');
     }

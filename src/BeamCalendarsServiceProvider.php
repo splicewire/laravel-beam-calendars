@@ -159,8 +159,14 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
             );
         }
 
-        ActionResources::declare();
-        ActionSeriesResources::declare();
+        // `Resources::declare()` above already scans `src/Data` + `src/Ops`, which holds both action
+        // surfaces; declaring them again here re-registered two field-identical resources (a pure
+        // supersession record — the flagship's RedundantResourceRegistrationTest). Only a host that
+        // opted out of that scan needs them named explicitly.
+        if (! config('beam.calendars.register_resources', true)) {
+            ActionResources::declare();
+            ActionSeriesResources::declare();
+        }
         Gate::policy(CalendarActionSeries::class, ActionSeriesPolicy::class);
         Relation::morphMap(['calendar_action_series' => CalendarActionSeries::class], true);
         Gate::policy(CalendarAction::class, ActionPolicy::class);

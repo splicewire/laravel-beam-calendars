@@ -9,6 +9,7 @@ use Splicewire\Beam\Calendars\Ops\RetryAction;
 use Splicewire\Beam\Calendars\Ops\ScheduleAction;
 use Splicewire\Beam\Facades\Particle;
 use Splicewire\Beam\Particle\Attributes\AttributedParticleDiscovery;
+use Splicewire\Beam\Particle\ParticleResourceRegistry;
 
 class ActionResources
 {
@@ -24,7 +25,10 @@ class ActionResources
     /** Call inside the host's authenticated tenant route group, after binding ActionContextProvider. */
     public static function mount(string $uri = 'calendar-actions'): void
     {
-        self::declare();
+        // Declared at boot by the provider; re-declaring at mount time only adds a supersession record.
+        if (! app(ParticleResourceRegistry::class)->has('calendar-actions')) {
+            self::declare();
+        }
         Particle::ops($uri, 'calendar-actions', [ScheduleAction::class, RescheduleAction::class, CancelAction::class, RetryAction::class]);
         Particle::mount($uri, 'calendar-actions')->only(['index', 'show'])->idConstraint('uuid');
     }
