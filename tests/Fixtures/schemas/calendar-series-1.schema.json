@@ -1,0 +1,149 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "title": "Calendar series",
+    "properties": {
+        "kind": {
+            "type": "string",
+            "examples": [
+                "string"
+            ]
+        },
+        "channel": {
+            "type": "string",
+            "examples": [
+                "string"
+            ]
+        },
+        "anchor": {
+            "type": "string",
+            "examples": [
+                "string"
+            ]
+        },
+        "rule": {
+            "$ref": "#/$defs/RecurrenceRuleData"
+        },
+        "spawn": {
+            "$ref": "#/$defs/SeriesSpawnData"
+        },
+        "window": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "examples": [
+                "string"
+            ]
+        },
+        "overrides": {
+            "type": "array",
+            "x-optional": true,
+            "examples": [
+                []
+            ]
+        }
+    },
+    "required": [
+        "kind",
+        "channel",
+        "anchor",
+        "rule",
+        "spawn",
+        "window"
+    ],
+    "$id": "https://app.splicewire.com/schemas/calendar/series/1",
+    "$defs": {
+        "RecurrenceFrequency": {
+            "type": "string",
+            "title": "RecurrenceFrequency",
+            "enum": [
+                "DAILY",
+                "WEEKLY",
+                "MONTHLY",
+                "YEARLY"
+            ]
+        },
+        "RecurrenceRuleData": {
+            "type": "object",
+            "title": "RecurrenceRuleData",
+            "properties": {
+                "freq": {
+                    "$ref": "#/$defs/RecurrenceFrequency"
+                },
+                "interval": {
+                    "type": "integer",
+                    "x-optional": true,
+                    "examples": [
+                        0
+                    ]
+                },
+                "count": {
+                    "type": "integer",
+                    "x-optional": true,
+                    "examples": [
+                        0
+                    ]
+                },
+                "until": {
+                    "type": "string",
+                    "x-optional": true,
+                    "examples": [
+                        "string"
+                    ]
+                },
+                "byday": {
+                    "type": "array",
+                    "x-optional": true,
+                    "examples": [
+                        []
+                    ]
+                }
+            },
+            "required": [
+                "freq"
+            ]
+        },
+        "SeriesSpawnMode": {
+            "type": "string",
+            "title": "SeriesSpawnMode",
+            "enum": [
+                "generate",
+                "reference"
+            ]
+        },
+        "SeriesSpawnData": {
+            "type": "object",
+            "title": "SeriesSpawnData",
+            "properties": {
+                "mode": {
+                    "$ref": "#/$defs/SeriesSpawnMode"
+                },
+                "instructions": {
+                    "type": "string",
+                    "x-optional": true,
+                    "examples": [
+                        "string"
+                    ]
+                },
+                "definition_ref": {
+                    "type": "string",
+                    "x-optional": true,
+                    "examples": [
+                        "string"
+                    ]
+                },
+                "composition_id": {
+                    "type": "string",
+                    "x-optional": true,
+                    "examples": [
+                        "string"
+                    ]
+                }
+            },
+            "required": [
+                "mode"
+            ]
+        }
+    }
+}

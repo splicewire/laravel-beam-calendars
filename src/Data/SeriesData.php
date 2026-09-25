@@ -83,8 +83,24 @@ class SeriesData extends BeamData implements SchemaIdentity
         return 'calendar/series';
     }
 
+    /**
+     * Version 2 — the shape this package ships, frozen over the engine-tier v1.
+     *
+     * v1 (`calendar/series/1`) was frozen from the engine tier this class was extracted from, whose
+     * nested spawn template was `SeriesSpawnData { composition_id, definition_ref, instructions,
+     * mode }`. This package's {@see SpawnData} names the reference neutrally (`targetRef`, wire key
+     * `target_ref`) and projects its collapsed schema on the PHP property names, so the nested
+     * `$defs` changed shape (beam-calendars `6deaee9`/`480398a`) while the top-level fields did not.
+     *
+     * The v1 → v2 payload step is the ladder's structural rung, and it is deliberately the identity on
+     * a stored payload: the top-level surface is unchanged, and the nested spawn keys a stored row
+     * carries (`composition_id`, `definition_ref`) are the READ vocabulary — `SpawnData::from()` reads
+     * the mapped input names, and tower's `TowerSpawnDriver::readableSeriesSlots()` owns the
+     * `composition_id` → `target_ref` translation. Renaming them in the migration would strand every
+     * reader of the stored slots. `SeriesSchemaVersionTest` pins the step.
+     */
     public static function schemaVersion(): int
     {
-        return 1;
+        return 2;
     }
 }
