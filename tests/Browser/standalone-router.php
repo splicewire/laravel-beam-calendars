@@ -44,6 +44,9 @@ class StandaloneArticle extends Model implements WorkflowManaged
     }
 }
 
+// A governed type carries a morph alias (launch ticket 05 ruling 1), so the fixture does too.
+\Illuminate\Database\Eloquent\Relations\Relation::morphMap(['standalone_article' => StandaloneArticle::class]);
+
 class StandaloneCalendarFixture extends Splicewire\Beam\Workflows\Tests\CalendarWorkflowTestCase
 {
     protected function defineEnvironment($app): void
