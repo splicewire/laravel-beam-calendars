@@ -22,6 +22,7 @@ use Splicewire\Beam\Calendars\Registries\EventKindRegistry;
 use Splicewire\Beam\Calendars\Registries\RendererRegistry;
 use Splicewire\Beam\Doctor\BeamDoctorManifest;
 use Splicewire\Beam\Install\BeamInstallManifest;
+use Splicewire\Beam\Nav\NavAudience;
 use Splicewire\Beam\Nav\NavSection;
 use Splicewire\Beam\Nav\NavSectionRegistry;
 
@@ -250,6 +251,7 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
                     order: 50,
                     entitlement: null,
                     permission: null,
+                audience: NavAudience::Product,
                 ),
                 by: 'splicewire/laravel-beam-calendars',
             );
