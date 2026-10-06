@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Rushing\DataFilters\Attributes\Filterable;
 use Rushing\DataFilters\Attributes\Sortable;
 use Rushing\DataFilters\Operators\Exact;
+use Schemastud\DataSchemas\Attributes\Title;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Authorization\RowAuthorization;
@@ -47,6 +48,7 @@ use Splicewire\Beam\Particle\Attributes\ParticleResource;
  * asserts the published keys directly.
  */
 #[TypeScript]
+#[Title('Calendar event')]
 class CalendarEventData extends BeamData
 {
     public function __construct(

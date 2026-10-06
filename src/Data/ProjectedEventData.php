@@ -4,6 +4,7 @@ namespace Splicewire\Beam\Calendars\Data;
 
 use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Example;
+use Schemastud\DataSchemas\Attributes\Title;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Calendars\Projection\ProjectedEvent;
@@ -41,6 +42,7 @@ use Splicewire\Beam\Data\BeamData;
  * asserts the published keys directly.
  */
 #[TypeScript]
+#[Title('Projected calendar event')]
 class ProjectedEventData extends BeamData
 {
     public function __construct(
