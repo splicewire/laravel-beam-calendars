@@ -9,6 +9,7 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Splicewire\Beam\Calendars\Actions\ActionPolicy;
 use Splicewire\Beam\Calendars\Actions\ActionSeriesPolicy;
+use Splicewire\Beam\Calendars\Actions\ActionService;
 use Splicewire\Beam\Calendars\Contracts\ChannelSource;
 use Splicewire\Beam\Calendars\Doctor\BeamCalendarsMigrationsAudit;
 use Splicewire\Beam\Calendars\Models\Calendar;
@@ -76,6 +77,10 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
         $this->app->scoped(ActionHandlerRegistry::class);
         $this->app->scoped(RendererRegistry::class);
         $this->app->scoped(ChannelRegistry::class);
+
+        // Optional consumers detect scheduling through bound(), not class autowiring.
+        // Keep a host's explicit implementation in either provider-registration order.
+        $this->app->bindIf(ActionService::class);
 
         // The default channel source IS the registry. An engine rebinds this interface to something
         // tenant-aware; nothing else in the package ever reaches for a concrete channel source.
