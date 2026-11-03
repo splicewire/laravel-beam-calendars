@@ -1,0 +1,63 @@
+---
+title: Calendar event kinds
+segment: beam.calendars.event_kinds
+nav_order: 100
+excerpt: What can sit on a date, and the typed payload class each kind is validated through.
+---
+
+# Calendar event kinds
+
+`beam.calendars.event_kinds` is the vocabulary of what can sit on a calendar date. Each entry maps a
+dotted kind key, such as `kind.event` or `kind.run-circuit`, to the Data class its payload is
+validated through. The package ships `kind.event`, `kind.series`, `kind.ref` and
+`kind.decommission`; an engine or host adds its own.
+
+{/* registry-facts:start — generated from the #[IsRegistry] declaration by `splicewire:beam:docs:registries:scaffold`. Rerun the command; do not edit between these markers. */}
+
+- **Root:** `beam.calendars.event_kinds`
+- **Entries:** `class-string<Splicewire\Beam\Data\BeamData>`
+- **Duplicate keys:** Supersede — a later registration under a taken key replaces the earlier entry, in its place
+- **Population:** Optional — an empty registry is normal
+- **Order:** `100` (display order, ascending)
+- **Declared by:** `Splicewire\Beam\Calendars\Registries\EventKindRegistry`
+
+{/* registry-facts:end */}
+
+## Adding a kind
+
+Write a Data class for the payload and register it under its kind:
+
+```php
+use Splicewire\Beam\Calendars\Registries\EventKindRegistry;
+
+app(EventKindRegistry::class)->register('kind.launch', LaunchEventData::class);
+```
+
+Or add it to the `event_kinds` array in your published `config/beam/calendars.php`. Keys keep their
+dots exactly as written. Tower, for example, adds `kind.disclosure-ref` and `kind.run-circuit` this
+way, without the calendar package knowing tower exists.
+
+## Unknown means refused on write
+
+An unregistered kind is simply an absent key, and the write path treats that as the unknown-kind
+condition. Writing an event of an unknown kind fails validation, and the message lists every kind
+that *is* registered, so you can tell at once whether the package that provides yours is installed.
+A known kind's payload is hydrated through its class, which both validates it and stores it in
+canonical form.
+
+## Event kinds don't execute
+
+Registering a kind only describes what is stored on a date. To make something run when a date comes
+due, register an [action handler](beam.calendars.action_handlers).
+
+## Related registries
+
+- [`beam.calendars.action_handlers`](beam.calendars.action_handlers): dated items that execute.
+- [The calendars cluster](beam.calendars): how the four fit together.
+
+## Going deeper
+
+The source is
+[`EventKindRegistry`](https://github.com/splicewire/laravel-beam-calendars/blob/main/src/Registries/EventKindRegistry.php),
+and the write-time check is
+[`KindValidator`](https://github.com/splicewire/laravel-beam-calendars/blob/main/src/Write/KindValidator.php).

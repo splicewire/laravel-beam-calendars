@@ -1,0 +1,57 @@
+---
+title: Calendar channels
+segment: beam.calendars.channels
+nav_order: 100
+excerpt: The named lanes a calendar's events are filed under, with a default lane so one is never zero.
+---
+
+# Calendar channels
+
+`beam.calendars.channels` is the lane vocabulary: the named **channels** a calendar's events are
+filed under, each with display metadata such as its label. A calendar with one channel reads as a
+single document with one column and one feed; a calendar with two or more reads as a multi-lane
+timeline.
+
+{/* registry-facts:start — generated from the #[IsRegistry] declaration by `splicewire:beam:docs:registries:scaffold`. Rerun the command; do not edit between these markers. */}
+
+- **Root:** `beam.calendars.channels`
+- **Entries:** `array{label: string}`
+- **Duplicate keys:** Supersede — a later registration under a taken key replaces the earlier entry, in its place
+- **Population:** Optional — an empty registry is normal
+- **Order:** `100` (display order, ascending)
+- **Declared by:** `Splicewire\Beam\Calendars\Registries\ChannelRegistry`
+
+{/* registry-facts:end */}
+
+## Adding a channel
+
+```php
+use Splicewire\Beam\Calendars\Registries\ChannelRegistry;
+
+app(ChannelRegistry::class)
+    ->register('social', ['label' => 'Social'])
+    ->register('press', ['label' => 'Press']);
+```
+
+Or set the `channels` array in your published `config/beam/calendars.php`.
+
+## The default lane
+
+The package seeds one channel, `default`. It is an ordinary entry, not a reserved name, so you can
+relabel or replace it. If the registry ends up empty, it still answers with `default`: one lane is a
+usable calendar, and zero lanes is not. A lane that has been removed still renders, under its raw id.
+
+## Per-tenant lanes
+
+This registry is the default channel source. A multi-tenant host that needs different lanes per
+tenant doesn't extend it: it binds `Contracts\ChannelSource` to something tenant-aware, and this
+registry remains the fallback.
+
+## Related registries
+
+- [The calendars cluster](beam.calendars): how the four fit together.
+
+## Going deeper
+
+The source is
+[`ChannelRegistry`](https://github.com/splicewire/laravel-beam-calendars/blob/main/src/Registries/ChannelRegistry.php).

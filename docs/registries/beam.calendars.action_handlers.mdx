@@ -1,0 +1,71 @@
+---
+title: Calendar action handlers
+segment: beam.calendars.action_handlers
+nav_order: 100
+excerpt: The handler behind each executable action kind, which authorizes, prepares and runs a dated action.
+---
+
+# Calendar action handlers
+
+`beam.calendars.action_handlers` maps an **action kind** to the handler that executes it. An action
+is dated intent with a recorded execution attempt: "move this record to *published* on Friday at
+09:00". It is separate from informational [event kinds](beam.calendars.event_kinds). Registering an
+event kind never turns a date into something that runs. The registry starts empty, and the calendar
+knows nothing about what an action means; the handler supplies that.
+
+{/* registry-facts:start — generated from the #[IsRegistry] declaration by `splicewire:beam:docs:registries:scaffold`. Rerun the command; do not edit between these markers. */}
+
+- **Root:** `beam.calendars.action_handlers`
+- **Entries:** `class-string<Splicewire\Beam\Calendars\Contracts\ActionHandler>`
+- **Duplicate keys:** Supersede — a later registration under a taken key replaces the earlier entry, in its place
+- **Population:** Optional — an empty registry is normal
+- **Order:** `100` (display order, ascending)
+- **Declared by:** `Splicewire\Beam\Calendars\Registries\ActionHandlerRegistry`
+
+{/* registry-facts:end */}
+
+## Registering a handler
+
+Implement `Contracts\ActionHandler` and register its class under the kind:
+
+```php
+use Splicewire\Beam\Calendars\Registries\ActionHandlerRegistry;
+
+app(ActionHandlerRegistry::class)->register('kind.workflow-transition', WorkflowActionHandler::class);
+```
+
+Kind names keep their dots exactly as written. The handler class is resolved through the container
+when it is needed.
+
+`splicewire/laravel-beam-workflows` registers `kind.workflow-transition` this way when both packages
+are installed, and only if the host hasn't registered that kind already.
+
+## What a handler does
+
+- `authorize()` checks the caller's live authority over the subject.
+- `prepare()` validates the action's payload through a declared Data class and returns it in
+  canonical form, with any server-derived pins.
+- `execute()` re-checks the stored principal and current facts when the action comes due, and
+  returns `applied`, `blocked` or `failed`.
+
+`authorize()` and `prepare()` run inside the transaction that creates or edits the action. `execute()`
+receives the database connection to use: do every local change on it, so the change and the action's
+result commit together.
+
+## Who reads it
+
+The action service and the scheduler. Scheduling an action of a kind with no registered handler
+fails. The scheduler's sweep resolves each due action's handler and runs it.
+
+## Going deeper
+
+Read [executable calendar actions](https://github.com/splicewire/laravel-beam-calendars/blob/main/docs/actions.md)
+before writing a handler. It covers mounting the operations, the context provider and the
+transaction boundaries. The source is
+[`ActionHandlerRegistry`](https://github.com/splicewire/laravel-beam-calendars/blob/main/src/Registries/ActionHandlerRegistry.php).
+
+## Related registries
+
+- [`beam.calendars.event_kinds`](beam.calendars.event_kinds): what is stored on a date, without
+  executing.
+- [The calendars cluster](beam.calendars): how the four fit together.

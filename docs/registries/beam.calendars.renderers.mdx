@@ -1,0 +1,68 @@
+---
+title: Calendar export renderers
+segment: beam.calendars.renderers
+nav_order: 100
+excerpt: One renderer per export format; the format token is the key, so adding a format is one registration.
+---
+
+# Calendar export renderers
+
+`beam.calendars.renderers` maps an export **format token** to the renderer that produces it. The
+package ships `ics` and `rss`. The token is both the registry key and the format a caller asks for,
+so the list of formats a host can export is read straight from this registry, never kept in a second
+list that could disagree with it.
+
+{/* registry-facts:start — generated from the #[IsRegistry] declaration by `splicewire:beam:docs:registries:scaffold`. Rerun the command; do not edit between these markers. */}
+
+- **Root:** `beam.calendars.renderers`
+- **Entries:** `class-string<Splicewire\Beam\Calendars\Contracts\CalendarRenderer>`
+- **Duplicate keys:** Supersede — a later registration under a taken key replaces the earlier entry, in its place
+- **Population:** Optional — an empty registry is normal
+- **Order:** `100` (display order, ascending)
+- **Declared by:** `Splicewire\Beam\Calendars\Registries\RendererRegistry`
+
+{/* registry-facts:end */}
+
+## Adding a format
+
+Implement `CalendarRenderer` and register it under its token:
+
+```php
+use Splicewire\Beam\Calendars\Contracts\CalendarRenderer;
+use Splicewire\Beam\Calendars\Registries\RendererRegistry;
+
+class CsvRenderer implements CalendarRenderer
+{
+    public function contentType(): string
+    {
+        return 'text/csv';
+    }
+
+    public function render(Calendar $calendar, array $occurrences, Horizon $horizon): string
+    {
+        // one row per occurrence
+    }
+}
+
+app(RendererRegistry::class)->register('csv', CsvRenderer::class);
+```
+
+A renderer is handed occurrences that have already been projected. It never queries and never
+expands recurrence itself, so two formats can't disagree about what a series means. Entries are class
+names resolved through the container, so a renderer can take constructor dependencies.
+
+## An unknown format is a bad request
+
+Asking the exporter for a format with no renderer fails validation rather than erroring, and the
+message names the formats that are available.
+
+## Related registries
+
+- [The calendars cluster](beam.calendars): how the four fit together.
+
+## Going deeper
+
+The source is
+[`RendererRegistry`](https://github.com/splicewire/laravel-beam-calendars/blob/main/src/Registries/RendererRegistry.php),
+read by
+[`CalendarExporter`](https://github.com/splicewire/laravel-beam-calendars/blob/main/src/Render/CalendarExporter.php).

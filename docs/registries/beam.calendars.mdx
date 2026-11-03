@@ -1,0 +1,44 @@
+---
+title: The calendars cluster
+segment: beam.calendars
+nav_order: 99
+excerpt: The four registries a calendar is extended through, and which one you reach for.
+---
+
+# The calendars cluster
+
+Everything under `beam.calendars.` is how you extend
+[`splicewire/laravel-beam-calendars`](https://github.com/splicewire/laravel-beam-calendars), the
+calendar particle: dated events, recurring series and exports. A host with nothing registered still
+has a complete calendar. These registries are where engines and hosts add vocabulary without editing
+the package.
+
+Which one you reach for:
+
+- **Put a new kind of thing on a date**: [`beam.calendars.event_kinds`](beam.calendars.event_kinds).
+- **Export to a new format**: [`beam.calendars.renderers`](beam.calendars.renderers).
+- **File events under named lanes**: [`beam.calendars.channels`](beam.calendars.channels).
+- **Make a dated item actually do something when it comes due**:
+  [`beam.calendars.action_handlers`](beam.calendars.action_handlers).
+
+## Stored in config
+
+All four keep their entries in the package's config file, `config/beam/calendars.php`, under the key
+that matches the root's last segment. That file is the storage, not a seed copied somewhere else, so
+you can add an entry in two equivalent ways: in your published config, or by calling `register()`
+from a provider. Every read goes back to config, so an entry another package registers in its own
+`boot()`, after this package has booted, is still seen.
+
+The package seeds four event kinds, two renderers (`ics` and `rss`) and one channel (`default`).
+Action handlers start empty.
+
+## What a duplicate means here
+
+All four **supersede**: registering a key that is already taken replaces the entry. That is how you
+replace a shipped renderer or relabel the `default` channel.
+
+## Going deeper
+
+[Popcorn registries](/beam/docs/foundations/registries) explains roots, keys and duplicate policies in
+general. The package's
+[README](https://github.com/splicewire/laravel-beam-calendars#readme) covers the calendar itself.
