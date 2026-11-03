@@ -52,6 +52,32 @@ outcomes, revision checks and explicit idempotent retries. Existing informationa
 Generate/Reference spawning retain their behavior. See [action setup and execution](docs/actions.md)
 for host context, particle mounting, opaque calendar associations and the transaction boundary.
 
+## Registries
+
+This package declares four registries. The [calendars cluster page](docs/registries/beam.calendars.mdx) says
+which one you reach for.
+
+- [`beam.calendars.event_kinds`](docs/registries/beam.calendars.event_kinds.mdx): what can sit on a date, and
+  the payload class each kind is validated through.
+- [`beam.calendars.channels`](docs/registries/beam.calendars.channels.mdx): the named lanes a calendar's events
+  are filed under.
+- [`beam.calendars.renderers`](docs/registries/beam.calendars.renderers.mdx): one renderer per export format.
+- [`beam.calendars.action_handlers`](docs/registries/beam.calendars.action_handlers.mdx): the handler behind each
+  executable action kind.
+
+It registers into registries `splicewire/laravel-beam` owns:
+
+- [`beam.install.steps`](https://github.com/splicewire/laravel-beam/blob/main/docs/registries/beam.install.steps.mdx):
+  the install step that publishes the config and the shared migrations.
+- [`beam.doctor.audits`](https://github.com/splicewire/laravel-beam/blob/main/docs/registries/beam.doctor.audits.mdx):
+  the audit of the package's own published migrations.
+- [`beam.nav.sections`](https://github.com/splicewire/laravel-beam/blob/main/docs/registries/beam.nav.sections.mdx):
+  a `calendars` section in the `operator` and `tenant` realms.
+- [`beam.particle.resources`](https://github.com/splicewire/laravel-beam/blob/main/docs/registries/beam.particle.resources.mdx)
+  and [`beam.particle.operations`](https://github.com/splicewire/laravel-beam/blob/main/docs/registries/beam.particle.operations.mdx):
+  the calendar and action resources and their operations, declared at boot. With `beam.calendars.register_resources`
+  off, only the two action resources and their operations are declared.
+
 ## Extending it
 
 See `AGENTS.md` for extension ports and registries, and for the handful of things that look like
