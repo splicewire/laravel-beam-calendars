@@ -16,7 +16,7 @@ it('declares each registry with a domain-first, vendor-free dotted root', functi
 
     expect((string) $declaration->rootKey())->toBe($root);
 })->with([
-    [EventKindRegistry::class, 'beam.calendars.event_kinds'],
+    [EventKindRegistry::class, 'beam.calendars.event-kinds'],
     [RendererRegistry::class, 'beam.calendars.renderers'],
     [ChannelRegistry::class, 'beam.calendars.channels'],
 ]);
@@ -24,7 +24,7 @@ it('declares each registry with a domain-first, vendor-free dotted root', functi
 it('routes a key to the registry that owns it', function () {
     $popcorn = app(PopcornManager::class);
 
-    expect($popcorn->routeTo('beam.calendars.event_kinds.kind.event'))->not->toBeNull()
+    expect($popcorn->routeTo('beam.calendars.event-kinds.kind.event'))->not->toBeNull()
         ->and($popcorn->routeTo('beam.calendars.renderers.ics'))->not->toBeNull();
 });
 

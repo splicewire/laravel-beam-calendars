@@ -12,7 +12,7 @@ use Splicewire\Beam\Data\BeamData;
  * The registry of calendar EVENT KINDS — the vocabulary of what can sit on a date, and the typed
  * payload class each kind resolves to.
  *
- * Storage is `config('beam.calendars.event_kinds')`, a map of dotted kind key → class-string. This
+ * Storage is `config('beam.calendars.event-kinds')`, a map of dotted kind key → class-string. This
  * package seeds the four generic kinds (`kind.event`, `kind.series`, `kind.ref`,
  * `kind.decommission`); `splicewire/tower` appends `kind.disclosure-ref` and `kind.run-circuit`
  * from its own provider; a host may append its own kind in its config file with no code here
@@ -37,7 +37,7 @@ use Splicewire\Beam\Data\BeamData;
  * a kind may declare constructor dependencies and be resolved through the container at use.
  */
 #[IsRegistry(
-    root: 'beam.calendars.event_kinds',
+    root: 'beam.calendars.event-kinds',
     entryType: 'class-string<'.BeamData::class.'>',
     onKeyDuplicate: OnKeyDuplicate::Supersede,
     populationRequirement: PopulationRequirement::Optional,
@@ -47,7 +47,7 @@ class EventKindRegistry extends ConfigRegistry
 {
     protected function configKey(): string
     {
-        return 'beam.calendars.event_kinds';
+        return 'beam.calendars.event-kinds';
     }
 
     /**

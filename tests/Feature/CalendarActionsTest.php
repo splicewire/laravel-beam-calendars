@@ -8,7 +8,7 @@ use Splicewire\Beam\Calendars\Data\CalendarActionData;
 use Splicewire\Beam\Calendars\Tests\Fakes\LocalActionHandler;
 
 beforeEach(function () {
-    config(['beam.calendars.action_handlers' => ['kind.local' => LocalActionHandler::class]]);
+    config(['beam.calendars.action-handlers' => ['kind.local' => LocalActionHandler::class]]);
     $this->context = new ActionContext('editor:1', 'user:1', 'tenant:one');
     $this->request = new CalendarActionData('kind.local', ['message' => 'Hello'], '2026-09-18T09:00:00-04:00', 'America/New_York');
 });
@@ -81,9 +81,9 @@ it('records a failed handler and an unavailable handler without committing parti
     $actions = app(ActionService::class);
     $first = $actions->schedule($this->request, $this->context);
     $second = $actions->schedule($this->request, $this->context);
-    config(['beam.calendars.action_handlers' => ['kind.local' => Splicewire\Beam\Calendars\Tests\Fakes\FailingLocalActionHandler::class]]);
+    config(['beam.calendars.action-handlers' => ['kind.local' => Splicewire\Beam\Calendars\Tests\Fakes\FailingLocalActionHandler::class]]);
     $failed = app(ActionScheduler::class)->run($first->id, 'tenant:one', Carbon::parse('2026-09-18T13:00:00Z'));
-    config(['beam.calendars.action_handlers' => []]);
+    config(['beam.calendars.action-handlers' => []]);
     $unavailable = app(ActionScheduler::class)->run($second->id, 'tenant:one', Carbon::parse('2026-09-18T13:00:00Z'));
 
     expect($failed->status)->toBe('failed')
@@ -134,7 +134,7 @@ it('projects action outcomes and stable attempt identity without exposing intern
 it('keeps blocked outcomes and rolls back their local writes until an explicit idempotent retry', function () {
     $actions = app(ActionService::class);
     $action = $actions->schedule($this->request, $this->context);
-    config(['beam.calendars.action_handlers' => ['kind.local' => Splicewire\Beam\Calendars\Tests\Fakes\BlockedLocalActionHandler::class]]);
+    config(['beam.calendars.action-handlers' => ['kind.local' => Splicewire\Beam\Calendars\Tests\Fakes\BlockedLocalActionHandler::class]]);
     $blocked = app(ActionScheduler::class)->run($action->id, 'tenant:one', Carbon::parse('2026-09-18T13:00:00Z'));
 
     expect($blocked->status)->toBe('blocked')
@@ -142,7 +142,7 @@ it('keeps blocked outcomes and rolls back their local writes until an explicit i
         ->and(Splicewire\Beam\Calendars\Tests\Fixtures\User::count())->toBe(0)
         ->and(app(ActionScheduler::class)->sweep('tenant:one', Carbon::parse('2026-09-19T13:00:00Z')))->toBe([]);
 
-    config(['beam.calendars.action_handlers' => ['kind.local' => LocalActionHandler::class]]);
+    config(['beam.calendars.action-handlers' => ['kind.local' => LocalActionHandler::class]]);
     $retry = $actions->retry($action->id, 2, $this->context, Carbon::parse('2026-09-19T13:00:00Z'), 'retry-123');
     $duplicate = $actions->retry($action->id, 2, $this->context, Carbon::parse('2026-09-19T13:00:00Z'), 'retry-123');
 
@@ -173,7 +173,7 @@ it('registers dot-bearing action kinds through the public registry and honors la
     $registry = app(Splicewire\Beam\Calendars\Registries\ActionHandlerRegistry::class);
     $registry->register('kind.workflow-transition', LocalActionHandler::class);
     expect($registry->handler('kind.workflow-transition'))->toBeInstanceOf(LocalActionHandler::class);
-    $registry->register('beam.calendars.action_handlers.kind.workflow-transition', Splicewire\Beam\Calendars\Tests\Fakes\BlockedLocalActionHandler::class);
+    $registry->register('beam.calendars.action-handlers.kind.workflow-transition', Splicewire\Beam\Calendars\Tests\Fakes\BlockedLocalActionHandler::class);
     expect($registry->handler('kind.workflow-transition'))->toBeInstanceOf(Splicewire\Beam\Calendars\Tests\Fakes\BlockedLocalActionHandler::class);
 });
 
@@ -209,7 +209,7 @@ it('rolls back subject effects when a model observer vetoes recording the applie
 
 it('reserves durable source origins for internal adapters and preserves origin during edits', function () {
     config(['beam.calendars.reserved_action_origins' => ['action-series:', 'transition:', 'composition-cell:']]);
-    config(['beam.calendars.action_handlers' => ['kind.local' => LocalActionHandler::class]]);
+    config(['beam.calendars.action-handlers' => ['kind.local' => LocalActionHandler::class]]);
     $service = app(ActionService::class);
     $context = new ActionContext('editor:1', 'user:1', 'tenant:one');
     $data = new CalendarActionData('kind.local', [], '2026-09-18T13:00:00Z', 'UTC');
@@ -225,7 +225,7 @@ it('reserves durable source origins for internal adapters and preserves origin d
 });
 
 it('restores previously durable intent and records revoked authority before any effects', function () {
-    config(['beam.calendars.action_handlers' => ['kind.local' => LocalActionHandler::class]]);
+    config(['beam.calendars.action-handlers' => ['kind.local' => LocalActionHandler::class]]);
     $service = app(ActionService::class);
     $context = new ActionContext('revoked:principal', 'user:creator', 'tenant:one');
     $data = new CalendarActionData('kind.local', ['prepared' => true], '2026-09-18T13:00:00Z', 'UTC', origin: 'durable-source:1');

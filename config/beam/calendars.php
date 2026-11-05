@@ -29,7 +29,7 @@ return [
     'spawn_driver' => null,
 
     // Executable action kinds are separate from informational event kinds and SpawnDriver.
-    'action_handlers' => [],
+    'action-handlers' => [],
 
     // Source namespaces owned by server adapters; public action scheduling cannot claim them.
     'reserved_action_origins' => ['action-series:'],
@@ -47,13 +47,16 @@ return [
      * ConfigRegistry subclasses reading through to this repository on every read. That is
      * load-bearing: tower registers its own kinds in packageBooted(), AFTER this package's
      * provider has already run, and a constructor snapshot would freeze them out.
+     *
+     * A registry's array key is spelled exactly as its root's last segment (`event-kinds`,
+     * `action-handlers`), so the root IS the config path: `config('beam.calendars.event-kinds')`.
      */
 
     // Event kinds. A registry MISS is the "unknown kind" condition — there is no class_exists
     // probe and no package interrogating whether a sibling is installed. Tower appends
     // `kind.disclosure-ref` and `kind.run-circuit` from its own provider; a host may append its
     // own kind here with no code in this package changing.
-    'event_kinds' => [
+    'event-kinds' => [
         'kind.event' => Splicewire\Beam\Calendars\Data\EventData::class,
         'kind.series' => Splicewire\Beam\Calendars\Data\SeriesData::class,
         'kind.ref' => Splicewire\Beam\Calendars\Data\RefData::class,

@@ -57,12 +57,12 @@ for host context, particle mounting, opaque calendar associations and the transa
 This package declares four registries. The [calendars cluster page](docs/registries/beam.calendars.mdx) says
 which one you reach for.
 
-- [`beam.calendars.event_kinds`](docs/registries/beam.calendars.event_kinds.mdx): what can sit on a date, and
+- [`beam.calendars.event-kinds`](docs/registries/beam.calendars.event-kinds.mdx): what can sit on a date, and
   the payload class each kind is validated through.
 - [`beam.calendars.channels`](docs/registries/beam.calendars.channels.mdx): the named lanes a calendar's events
   are filed under.
 - [`beam.calendars.renderers`](docs/registries/beam.calendars.renderers.mdx): one renderer per export format.
-- [`beam.calendars.action_handlers`](docs/registries/beam.calendars.action_handlers.mdx): the handler behind each
+- [`beam.calendars.action-handlers`](docs/registries/beam.calendars.action-handlers.mdx): the handler behind each
   executable action kind.
 
 It registers into registries `splicewire/laravel-beam` owns:

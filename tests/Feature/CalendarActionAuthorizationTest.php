@@ -19,7 +19,7 @@ beforeEach(function () {
     app()->register(Schemastud\DataSchemas\LaravelDataSchemasServiceProvider::class);
     RevocableLocalActionHandler::$revoked = false;
     RevocableLocalActionHandler::$denyReplacement = false;
-    config(['beam.calendars.action_handlers' => ['kind.local' => RevocableLocalActionHandler::class]]);
+    config(['beam.calendars.action-handlers' => ['kind.local' => RevocableLocalActionHandler::class]]);
     app()->instance(ActionContextProvider::class, new class implements ActionContextProvider
     {
         public function current(): ActionContext
@@ -68,18 +68,18 @@ it('refuses revoked concrete authority before mutation and accepts the same requ
             $body['action'] = array_replace($this->actionInput, ['due_at' => '2026-09-19T13:00:00Z']);
         }
         if ($operation === 'retry') {
-            config(['beam.calendars.action_handlers' => ['kind.local' => BlockedLocalActionHandler::class]]);
+            config(['beam.calendars.action-handlers' => ['kind.local' => BlockedLocalActionHandler::class]]);
             app(ActionScheduler::class)->run($id, 'tenant:one', CarbonImmutable::parse('2026-09-18T13:00:00Z'));
             expect(CalendarAction::findOrFail($id)->status)->toBe('blocked');
             $body = ['expected_revision' => 2, 'due_at' => '2026-09-19T13:00:00Z', 'idempotency_key' => 'restored-retry'];
         }
         if ($operation === 'resume') {
-            config(['beam.calendars.action_handlers' => []]);
+            config(['beam.calendars.action-handlers' => []]);
             app(ActionSeriesService::class)->sweep('tenant:one', CarbonImmutable::parse('2026-09-18T13:00:00Z'));
             expect(CalendarActionSeries::findOrFail($id)->status)->toBe('blocked');
             $body['expected_revision'] = 2;
         }
-        config(['beam.calendars.action_handlers' => ['kind.local' => RevocableLocalActionHandler::class]]);
+        config(['beam.calendars.action-handlers' => ['kind.local' => RevocableLocalActionHandler::class]]);
     }
 
     $before = calendarAuthoritySnapshot();

@@ -1,21 +1,21 @@
 ---
 title: Calendar action handlers
-segment: beam.calendars.action_handlers
+segment: beam.calendars.action-handlers
 nav_order: 100
 excerpt: The handler behind each executable action kind, which authorizes, prepares and runs a dated action.
 ---
 
 # Calendar action handlers
 
-`beam.calendars.action_handlers` maps an **action kind** to the handler that executes it. An action
+`beam.calendars.action-handlers` maps an **action kind** to the handler that executes it. An action
 is dated intent with a recorded execution attempt: "move this record to *published* on Friday at
-09:00". It is separate from informational [event kinds](beam.calendars.event_kinds). Registering an
+09:00". It is separate from informational [event kinds](beam.calendars.event-kinds). Registering an
 event kind never turns a date into something that runs. The registry starts empty, and the calendar
 knows nothing about what an action means; the handler supplies that.
 
 {/* registry-facts:start — generated from the #[IsRegistry] declaration; regenerate it, do not edit between these markers. */}
 
-- **Root:** `beam.calendars.action_handlers`
+- **Root:** `beam.calendars.action-handlers`
 - **Entries:** `class-string<Splicewire\Beam\Calendars\Contracts\ActionHandler>`
 - **Duplicate keys:** Supersede — a later registration under a taken key replaces the earlier entry, in its place
 - **Population:** Optional — an empty registry is normal
@@ -24,7 +24,7 @@ knows nothing about what an action means; the handler supplies that.
 
 {/* registry-facts:end */}
 
-<RegistryRegistrants root="beam.calendars.action_handlers" />
+<RegistryRegistrants root="beam.calendars.action-handlers" />
 
 ## Registering a handler
 
@@ -68,6 +68,6 @@ transaction boundaries. The source is
 
 ## Related registries
 
-- [`beam.calendars.event_kinds`](beam.calendars.event_kinds): what is stored on a date, without
+- [`beam.calendars.event-kinds`](beam.calendars.event-kinds): what is stored on a date, without
   executing.
 - [The calendars cluster](beam.calendars): how the four fit together.

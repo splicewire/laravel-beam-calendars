@@ -10,7 +10,7 @@ use Rushing\Popcorn\Registries\RegistryKey;
 use Splicewire\Beam\Calendars\Contracts\ActionHandler;
 
 #[IsRegistry(
-    root: 'beam.calendars.action_handlers',
+    root: 'beam.calendars.action-handlers',
     entryType: 'class-string<'.ActionHandler::class.'>',
     onKeyDuplicate: OnKeyDuplicate::Supersede,
     populationRequirement: PopulationRequirement::Optional,
@@ -20,7 +20,7 @@ class ActionHandlerRegistry extends ConfigRegistry
 {
     protected function configKey(): string
     {
-        return 'beam.calendars.action_handlers';
+        return 'beam.calendars.action-handlers';
     }
 
     /** Kind names contain dots. ConfigRegistry writes the entire root array, so literal keys are safe. */

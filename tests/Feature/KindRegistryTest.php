@@ -17,8 +17,8 @@ it('seeds the four generic kinds and nothing engine-specific', function () {
 it('lets a LATE registrant contribute a kind, which is how the engine adds without being named', function () {
     // Simulates tower's provider booting after this package's own. The registry reads through to
     // the config repository on every read, so a snapshot-at-construction would fail this.
-    config(['beam.calendars.event_kinds' => array_merge(
-        config('beam.calendars.event_kinds'),
+    config(['beam.calendars.event-kinds' => array_merge(
+        config('beam.calendars.event-kinds'),
         ['kind.run-circuit' => EventData::class],
     )]);
 

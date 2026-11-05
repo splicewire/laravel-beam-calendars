@@ -16,7 +16,7 @@ Extensions use the ports and registries below; a host with nothing bound has a c
   never touches the database, and the substrate keeps the exactly-once write.
 - `Contracts\ChannelSource` — where lane vocabulary comes from. Defaults to the channel registry; a
   multi-tenant host binds something tenant-aware.
-- `beam.calendars.event_kinds` — an unregistered kind is an **absent config key**, so a registry miss
+- `beam.calendars.event-kinds` — an unregistered kind is an **absent config key**, so a registry miss
   IS the unknown-kind condition. This is what lets tower contribute `kind.disclosure-ref` and
   `kind.run-circuit` without this package being able to name tower at all.
 - `beam.calendars.renderers` — format token → renderer. Adding a format is a registration, not an edit.
@@ -24,7 +24,7 @@ Extensions use the ports and registries below; a host with nothing bound has a c
 
 Before adding an executable action handler, mounting its particle operations, or scheduling its
 execution or extending recurrence, read [action setup and transaction boundaries](docs/actions.md). `ActionHandler`,
-`ActionContextProvider` and `beam.calendars.action_handlers` are separate from the pure spawn port.
+`ActionContextProvider` and `beam.calendars.action-handlers` are separate from the pure spawn port.
 
 ## Things that look like tidying and are not
 

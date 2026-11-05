@@ -13,7 +13,7 @@ use Splicewire\Beam\Calendars\Tests\Fakes\LocalActionHandler;
 
 beforeEach(function () {
     app()->register(Schemastud\DataSchemas\LaravelDataSchemasServiceProvider::class);
-    config(['beam.calendars.action_handlers' => ['kind.local' => LocalActionHandler::class]]);
+    config(['beam.calendars.action-handlers' => ['kind.local' => LocalActionHandler::class]]);
     $this->contextProvider = new class implements ActionContextProvider
     {
         public ActionContext $context;
@@ -66,11 +66,11 @@ it('scopes recurring reads and all mutation subjects to host principal and tenan
 
 it('reports unavailable materialization and resumes explicitly through the mounted surface', function () {
     $id = $this->postJson('/api/beam/calendar-action-series/schedule', $this->input)->assertOk()->json('data.id');
-    config(['beam.calendars.action_handlers' => []]);
+    config(['beam.calendars.action-handlers' => []]);
     app(ActionSeriesService::class)->sweep('tenant:one', CarbonImmutable::parse('2026-09-18T13:00:00Z'));
     $this->getJson('/api/beam/calendar-action-series/'.$id)->assertOk()->assertJsonPath('data.status', 'blocked')->assertJsonCount(1, 'data.blockers');
     expect(CalendarAction::query()->count())->toBe(0);
-    config(['beam.calendars.action_handlers' => ['kind.local' => LocalActionHandler::class]]);
+    config(['beam.calendars.action-handlers' => ['kind.local' => LocalActionHandler::class]]);
     $this->postJson('/api/beam/calendar-action-series/'.$id.'/resume', ['expected_revision' => 2])->assertOk()->assertJsonPath('data.revision', 3)->assertJsonPath('data.status', 'active');
     $this->postJson('/api/beam/calendar-action-series/'.$id.'/resume', ['expected_revision' => 2])->assertConflict();
     app(ActionSeriesService::class)->sweep('tenant:one', CarbonImmutable::parse('2026-09-18T13:00:00Z'));

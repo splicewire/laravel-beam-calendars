@@ -11,7 +11,7 @@ use Splicewire\Beam\Calendars\Tests\Fakes\LocalActionHandler;
 
 beforeEach(function () {
     app()->register(Schemastud\DataSchemas\LaravelDataSchemasServiceProvider::class);
-    config(['beam.calendars.action_handlers' => ['kind.local' => LocalActionHandler::class]]);
+    config(['beam.calendars.action-handlers' => ['kind.local' => LocalActionHandler::class]]);
     $this->contextProvider = new class implements ActionContextProvider
     {
         public ActionContext $context;
@@ -77,7 +77,7 @@ it('reschedules and cancels through declared operations with revision conflicts'
 
 it('retries through the declared operation with browser ISO instants and one idempotent attempt', function () {
     $id = $this->postJson('/api/beam/calendar-actions/schedule', $this->payload)->assertOk()->json('data.id');
-    config(['beam.calendars.action_handlers' => ['kind.local' => Splicewire\Beam\Calendars\Tests\Fakes\BlockedLocalActionHandler::class]]);
+    config(['beam.calendars.action-handlers' => ['kind.local' => Splicewire\Beam\Calendars\Tests\Fakes\BlockedLocalActionHandler::class]]);
     app(Splicewire\Beam\Calendars\Actions\ActionScheduler::class)->run($id, 'tenant:one', Carbon::parse('2026-09-18T13:00:00Z'));
     $body = ['expected_revision' => 2, 'due_at' => '2026-09-19T13:00:00.000Z', 'idempotency_key' => 'browser-retry'];
     $attempt = $this->postJson('/api/beam/calendar-actions/'.$id.'/retry', $body)->assertOk()->json('data.id');

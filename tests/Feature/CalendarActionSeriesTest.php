@@ -8,7 +8,7 @@ use Splicewire\Beam\Calendars\Models\CalendarAction;
 use Splicewire\Beam\Calendars\Tests\Fakes\LocalActionHandler;
 
 beforeEach(function () {
-    config(['beam.calendars.action_handlers' => ['kind.local' => LocalActionHandler::class]]);
+    config(['beam.calendars.action-handlers' => ['kind.local' => LocalActionHandler::class]]);
     $this->context = new ActionContext('editor:1', 'user:1', 'tenant:one');
     $this->seriesInput = ActionSeriesInputData::from([
         'action' => ['kind' => 'kind.local', 'payload' => ['message' => 'Recurring'], 'due_at' => '2026-09-18T09:00:00-04:00', 'timezone' => 'America/New_York', 'calendar_id' => 'calendar:standalone'],
@@ -68,7 +68,7 @@ it('cancels only pending occurrences and stops future expansion without rewritin
 });
 
 it('keeps the server-prepared template frozen when later definitions change', function () {
-    config(['beam.calendars.action_handlers' => ['kind.local' => Splicewire\Beam\Calendars\Tests\Fakes\FrozenTemplateActionHandler::class]]);
+    config(['beam.calendars.action-handlers' => ['kind.local' => Splicewire\Beam\Calendars\Tests\Fakes\FrozenTemplateActionHandler::class]]);
     $service = app(ActionSeriesService::class);
     $series = $service->schedule($this->seriesInput, $this->context);
     config(['test.definition_version' => 2]);
