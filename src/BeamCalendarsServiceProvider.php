@@ -5,6 +5,7 @@ namespace Splicewire\Beam\Calendars;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Rushing\PermissionCascade\Support\CascadePolicyRegistrar;
+use Rushing\Popcorn\Registries\ScopesRegistrant;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Splicewire\Beam\Calendars\Actions\ActionPolicy;
@@ -38,6 +39,14 @@ use Splicewire\Beam\Nav\NavSectionRegistry;
  */
 class BeamCalendarsServiceProvider extends PackageServiceProvider
 {
+    use ScopesRegistrant;
+
+    /** Every registry write in register()/boot() that names no `$by` records this package. */
+    protected function registrant(): string
+    {
+        return 'splicewire/laravel-beam-calendars';
+    }
+
     public function configurePackage(Package $package): void
     {
         // Migrations ship PUBLISH-ONLY (spatie/laravel-package-tools defaults runsMigrations to
@@ -256,7 +265,7 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
                     order: 50,
                     entitlement: null,
                     permission: null,
-                audience: NavAudience::Product,
+                    audience: NavAudience::Product,
                 ),
                 by: 'splicewire/laravel-beam-calendars',
             );
