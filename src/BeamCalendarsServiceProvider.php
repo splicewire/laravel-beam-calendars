@@ -12,7 +12,6 @@ use Splicewire\Beam\Calendars\Actions\ActionPolicy;
 use Splicewire\Beam\Calendars\Actions\ActionSeriesPolicy;
 use Splicewire\Beam\Calendars\Actions\ActionService;
 use Splicewire\Beam\Calendars\Contracts\ChannelSource;
-use Splicewire\Beam\Calendars\Doctor\BeamCalendarsMigrationsAudit;
 use Splicewire\Beam\Calendars\Models\Calendar;
 use Splicewire\Beam\Calendars\Models\CalendarAction;
 use Splicewire\Beam\Calendars\Models\CalendarActionSeries;
@@ -168,9 +167,9 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
         }
 
         if ($this->app->bound(BeamDoctorManifest::class)) {
-            $this->app->make(BeamDoctorManifest::class)->register(
+            $this->app->make(BeamDoctorManifest::class)->stubMigrations(
                 'splicewire/laravel-beam-calendars',
-                BeamCalendarsMigrationsAudit::class,
+                self::class,
             );
         }
 
