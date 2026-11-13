@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Splicewire\Beam\Calendars\ActionResources;
+use Splicewire\Beam\Calendars\ActionSeriesResources;
 use Splicewire\Beam\Calendars\Resources;
 use Splicewire\Beam\Calendars\Routing\CalendarsRoutes;
 
@@ -66,6 +67,42 @@ it('mounts calendar-actions only when the host asks, as it does today', function
 
     expect($current->getActionName())->toBe($match('/api/beam/calendar-actions')->getActionName())
         ->and($current->getName())->toStartWith('beam.calendars.');
+});
+
+// review-r1 REVISE at 05a4305: the package also declares calendar-action-series and ships
+// ActionSeriesResources::mount(), an optional host mount like calendar-actions.
+it('mounts calendar-action-series at the package root only when the host asks, with its whole table', function () use ($uris) {
+    Route::prefix('api/beam')->group(fn () => ActionSeriesResources::mount());
+    CalendarsRoutes::mount();
+    CalendarsRoutes::mountActions();
+
+    expect(array_filter($uris(), fn (string $uri) => str_starts_with($uri, 'beam/calendars/calendar-action-series')))->toBeEmpty();
+
+    Route::domain('workspace.example')->middleware('auth')->group(fn () => CalendarsRoutes::mountActionSeries());
+    $series = array_filter(routeTable('beam/calendars/'), fn (string $key) => str_contains($key, 'calendar-action-series'), ARRAY_FILTER_USE_KEY);
+    $legacy = array_filter(routeTable('api/beam/'), fn (string $key) => str_contains($key, 'calendar-action-series'), ARRAY_FILTER_USE_KEY);
+
+    // The whole series table (index, show and the seven ops) by method, path and action.
+    expect($series)->toBe($legacy)
+        ->and(count($series))->toBeGreaterThanOrEqual(9);
+
+    $index = app(Router::class)->getRoutes()->match(Request::create('http://workspace.example/beam/calendars/calendar-action-series'));
+    expect($index->gatherMiddleware())->toContain('auth')
+        ->and($index->getDomain())->toBe('workspace.example')
+        ->and($index->getName())->toStartWith('beam.calendars.');
+    $this->getJson('http://workspace.example/beam/calendars/calendar-action-series')->assertUnauthorized();
+});
+
+it('moves the action-series mount with an overridden root', function () use ($uris) {
+    Route::prefix('api/beam')->group(fn () => ActionSeriesResources::mount());
+    config(['beam.calendars.api_root' => '/custom/cal/']);
+
+    CalendarsRoutes::mountActionSeries();
+
+    $custom = array_filter(routeTable('custom/cal/'), fn (string $key) => str_contains($key, 'calendar-action-series'), ARRAY_FILTER_USE_KEY);
+    $legacy = array_filter(routeTable('api/beam/'), fn (string $key) => str_contains($key, 'calendar-action-series'), ARRAY_FILTER_USE_KEY);
+    expect($custom)->toBe($legacy)
+        ->and(array_filter($uris(), fn (string $uri) => str_starts_with($uri, 'beam/calendars/')))->toBeEmpty();
 });
 
 it('moves only the package root when the host overrides it', function () use ($match, $uris) {

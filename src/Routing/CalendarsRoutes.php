@@ -4,6 +4,7 @@ namespace Splicewire\Beam\Calendars\Routing;
 
 use Illuminate\Routing\Router;
 use Splicewire\Beam\Calendars\ActionResources;
+use Splicewire\Beam\Calendars\ActionSeriesResources;
 use Splicewire\Beam\Calendars\Resources;
 use Splicewire\Beam\Particle\ParticleOperationRegistry;
 use Splicewire\Beam\Routing\ApiRoot;
@@ -40,6 +41,17 @@ final class CalendarsRoutes
     {
         ApiRoot::mount(app(Router::class), 'beam.calendars.api_root', 'calendars', function (Router $router) use ($uri): void {
             $router->name('beam.calendars.')->group(fn () => ActionResources::mount($uri));
+        });
+    }
+
+    /**
+     * The calendar-action-series resource and its ops: what `ActionSeriesResources::mount()` mounts today. Optional for
+     * the same reason as `mountActions()`: a host that does not mount action series today gains no route.
+     */
+    public static function mountActionSeries(string $uri = 'calendar-action-series'): void
+    {
+        ApiRoot::mount(app(Router::class), 'beam.calendars.api_root', 'calendars', function (Router $router) use ($uri): void {
+            $router->name('beam.calendars.')->group(fn () => ActionSeriesResources::mount($uri));
         });
     }
 }

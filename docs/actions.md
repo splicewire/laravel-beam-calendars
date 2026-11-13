@@ -148,6 +148,9 @@ Mount the optional action-series surface inside the same trusted host route grou
 Splicewire\Beam\Calendars\ActionSeriesResources::mount('calendar-action-series');
 ```
 
+At the package root (ADR-0243), `Routing\CalendarsRoutes::mountActionSeries()` registers the same routes under
+`beam.calendars.api_root`, in the same group, beside the legacy mount until ticket 16 of owner-review-20261112.
+
 Resource index/show reads use the current principal and tenant, with exact `filter[calendar_id]`.
 The write resource remains disabled; operations declare their complete Data shapes:
 
