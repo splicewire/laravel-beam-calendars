@@ -25,6 +25,11 @@ Dotted names such as `kind.workflow-transition` are preserved. The provider decl
 Splicewire\Beam\Calendars\ActionResources::mount('calendar-actions');
 ```
 
+The package also exports its own root (ADR-0243): `Routing\CalendarsRoutes::mount()` registers the calendar
+resources and `Routing\CalendarsRoutes::mountActions()` this action resource under `beam.calendars.api_root`
+(default `beam/calendars`), with route names starting `beam.calendars.`. Call them inside the same authenticated
+tenant group, beside the mounts above. The legacy mounts stay until ticket 16 of owner-review-20261112.
+
 The read surface is `GET calendar-actions` and `GET calendar-actions/{id}`. Both are limited to the
 current tenant and execution principal. `filter[calendar_id]` is a declared exact filter. The
 `calendar_id` association is an opaque string: a host can distinguish `calendar:<uuid>` and

@@ -80,6 +80,11 @@ return [
     // them itself (or a headless site) sets false.
     'register_resources' => true,
 
+    // The package's own API root (ADR-0243, owner-review-20261112 13d): `CalendarsRoutes::mount()` and
+    // `::mountActions()` register here, inside the host's boundary. The legacy `resources.group_prefix` mount below
+    // stays beside it until ticket 16.
+    'api_root' => 'beam/calendars',
+
     // Route group for the mounted resources (host convention).
     'resources' => [
         'group_prefix' => 'resources',

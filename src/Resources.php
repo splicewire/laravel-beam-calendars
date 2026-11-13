@@ -104,20 +104,27 @@ class Resources
         // (registry-kernel 70 Q1). Overridable for a host that keys these differently.
         $idConstraint = $opts['idConstraint'] ?? 'uuid';
 
-        Route::middleware($middleware)->prefix($groupPrefix)->group(function () use ($idConstraint): void {
-            Particle::mount('calendars', 'calendars')->idConstraint($idConstraint);
-            Particle::mount('calendar-events', 'calendar-events')->idConstraint($idConstraint);
-            Particle::mount('calendar-series', 'calendar-series')->idConstraint($idConstraint);
+        Route::middleware($middleware)->prefix($groupPrefix)->group(fn () => self::routes($idConstraint));
+    }
 
-            // `Particle::ops()` both DISCOVERS (registers) the attributed ops and mounts them at
-            // `calendars/{id}/op/{name}`, so there is no separate registration step to forget.
-            Particle::ops('calendars', 'calendars', [
-                ProjectHorizon::class,
-                ExportCalendar::class,
-                SweepCalendar::class,
-                MaterializeOccurrence::class,
-                SkipOccurrence::class,
-            ]);
-        });
+    /**
+     * The calendars resources' routes, relative to whatever group the caller opens: the legacy host-prefixed group
+     * above, or the package root `CalendarsRoutes::mount()` opens (owner-review-20261112 13d). One body, two mounts.
+     */
+    public static function routes(string $idConstraint = 'uuid'): void
+    {
+        Particle::mount('calendars', 'calendars')->idConstraint($idConstraint);
+        Particle::mount('calendar-events', 'calendar-events')->idConstraint($idConstraint);
+        Particle::mount('calendar-series', 'calendar-series')->idConstraint($idConstraint);
+
+        // `Particle::ops()` both DISCOVERS (registers) the attributed ops and mounts them at
+        // `calendars/{id}/op/{name}`, so there is no separate registration step to forget.
+        Particle::ops('calendars', 'calendars', [
+            ProjectHorizon::class,
+            ExportCalendar::class,
+            SweepCalendar::class,
+            MaterializeOccurrence::class,
+            SkipOccurrence::class,
+        ]);
     }
 }
