@@ -3,7 +3,7 @@
 namespace Splicewire\Beam\Calendars\Ops\Concerns;
 
 use Illuminate\Support\Carbon;
-use Illuminate\Validation\ValidationException;
+use Splicewire\Beam\Calendars\Localization\CalendarError;
 use Splicewire\Beam\Calendars\Models\CalendarSeries;
 use Splicewire\Beam\Calendars\Recurrence\Occurrence;
 use Splicewire\Beam\Calendars\Recurrence\SeriesExpander;
@@ -30,9 +30,7 @@ trait ResolvesOccurrences
             ->whereKey($seriesId)
             ->first();
 
-        return $series ?? throw ValidationException::withMessages([
-            'series_id' => 'That series does not belong to this calendar.',
-        ]);
+        return $series ?? throw CalendarError::SeriesCalendarMismatch->validation('series_id');
     }
 
     /**
@@ -70,12 +68,6 @@ trait ResolvesOccurrences
             }
         }
 
-        throw ValidationException::withMessages([
-            'recurrence_id' => sprintf(
-                'This series generates no occurrence on [%s]. Pinning a date the rule does not '
-                .'produce would write an override that can never match.',
-                $recurrenceId,
-            ),
-        ]);
+        throw CalendarError::OccurrenceMissing->validation('recurrence_id', ['date' => $recurrenceId]);
     }
 }

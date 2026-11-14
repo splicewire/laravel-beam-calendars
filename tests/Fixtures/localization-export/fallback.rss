@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Calendar</title>
+    <description>Calendar</description>
+    <lastBuildDate><GENERATED></lastBuildDate>
+    <item>
+      <title>Authored, title; literal</title>
+      <guid isPermaLink="false">urn:beam-calendar:calendar-authored-id:authored-title</guid>
+      <pubDate>Fri, 09 Jan 2026 00:00:00 GMT</pubDate>
+      <category>authored-channel</category>
+    </item>
+    <item>
+      <title>2026-01-08</title>
+      <guid isPermaLink="false">urn:beam-calendar:calendar-authored-id:authored-kind</guid>
+      <pubDate>Thu, 08 Jan 2026 00:00:00 GMT</pubDate>
+      <category>authored-channel</category>
+    </item>
+    <item>
+      <title>2026-01-07</title>
+      <guid isPermaLink="false">urn:beam-calendar:calendar-authored-id:empty-kind</guid>
+      <pubDate>Wed, 07 Jan 2026 00:00:00 GMT</pubDate>
+      <category>authored-channel</category>
+    </item>
+    <item>
+      <title>2026-01-06</title>
+      <guid isPermaLink="false">urn:beam-calendar:calendar-authored-id:null-kind</guid>
+      <pubDate>Tue, 06 Jan 2026 00:00:00 GMT</pubDate>
+      <category>authored-channel</category>
+    </item>
+  </channel>
+</rss>

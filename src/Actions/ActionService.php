@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use RuntimeException;
 use Splicewire\Beam\Calendars\Data\CalendarActionData;
+use Splicewire\Beam\Calendars\Localization\CalendarError;
 use Splicewire\Beam\Calendars\Models\CalendarAction;
 use Splicewire\Beam\Calendars\Models\CalendarActionAttempt;
 use Splicewire\Beam\Calendars\Registries\ActionHandlerRegistry;
@@ -26,7 +26,7 @@ class ActionService
     {
         foreach (config('beam.calendars.reserved_action_origins', ['action-series:']) as $prefix) {
             if ($data->origin !== null && str_starts_with($data->origin, $prefix)) {
-                throw ValidationException::withMessages(['origin' => 'This source origin is reserved for a server adapter.']);
+                throw CalendarError::OriginReserved->validation('origin');
             }
         }
 
@@ -59,7 +59,7 @@ class ActionService
 
         $schedule = function () use ($data, $context, $connection, $intentHash, $prepare, $authorize): CalendarAction {
             $handler = $authorize || $prepare
-                ? ($this->handlers->handler($data->kind) ?? throw ValidationException::withMessages(['kind' => 'No execution handler is available for this action kind.']))
+                ? ($this->handlers->handler($data->kind) ?? throw CalendarError::HandlerUnavailable->validation('kind'))
                 : null;
             if ($authorize) {
                 $handler->authorize($data, $context, $connection);
@@ -123,13 +123,13 @@ class ActionService
             $this->authorize($action, $context, $connection);
             $this->expectRevision($action, $expectedRevision, ['pending']);
             if ($data->origin !== $action->origin) {
-                throw new ActionConflict('An action keeps its source origin when edited.');
+                throw CalendarError::OriginImmutable->conflict();
             }
             if ($action->series_id !== null && ($data->seriesId !== $action->series_id || $data->recurrenceId !== $action->recurrence_id || $data->origin !== $action->origin)) {
-                throw new ActionConflict('A recurring action keeps its source series, recurrence identity and origin when edited.');
+                throw CalendarError::SeriesIdentityImmutable->conflict();
             }
             $handler = $this->handlers->handler($data->kind)
-                ?? throw ValidationException::withMessages(['kind' => 'No execution handler is available for this action kind.']);
+                ?? throw CalendarError::HandlerUnavailable->validation('kind');
             $handler->authorize($data, $context, $connection);
             $prepared = $handler->prepare(clone $data, $context, $connection);
             $action->forceFill($this->attributes($prepared) + [
@@ -171,7 +171,7 @@ class ActionService
     public function retry(string $id, int $expectedRevision, ActionContext $context, CarbonInterface $dueAt, string $idempotencyKey, ?ConnectionInterface $connection = null): CalendarActionAttempt
     {
         if (trim($idempotencyKey) === '' || strlen($idempotencyKey) > 255) {
-            throw ValidationException::withMessages(['idempotency_key' => 'Provide a nonempty retry key of at most 255 characters.']);
+            throw CalendarError::RetryKeyInvalid->validation('idempotency_key');
         }
 
         $connection = $this->connection($connection);
@@ -187,7 +187,7 @@ class ActionService
 
             if ($existing !== null) {
                 if ($existing->idempotency_hash !== $fingerprint) {
-                    throw new ActionConflict('The retry key was already used for a different request.');
+                    throw CalendarError::RetryKeyUsed->conflict();
                 }
 
                 return $existing;
@@ -214,21 +214,21 @@ class ActionService
     private function authorize(CalendarAction $action, ActionContext $context, Connection $connection): void
     {
         $handler = $this->handlers->handler($action->kind)
-            ?? throw ValidationException::withMessages(['kind' => 'No execution handler is available for this action kind.']);
+            ?? throw CalendarError::HandlerUnavailable->validation('kind');
         $handler->authorize($action->toActionData(), $context, $connection);
     }
 
     private function expectRevision(CalendarAction $action, int $expectedRevision, array $statuses): void
     {
         if ($action->revision !== $expectedRevision || ! in_array($action->status, $statuses, true)) {
-            throw new ActionConflict('The action changed or is no longer editable. Reload its current outcome.');
+            throw CalendarError::ActionChanged->conflict();
         }
     }
 
     private function sameIntent(CalendarAction $action, string $intentHash): CalendarAction
     {
         if ($action->intent_hash !== $intentHash) {
-            throw new ActionConflict('This origin already identifies a different action intent. Edit the existing action explicitly.');
+            throw CalendarError::OriginUsed->conflict();
         }
 
         return $action;
@@ -282,7 +282,7 @@ class ActionService
     private function attributes(CalendarActionData $data): array
     {
         if (! in_array($data->timezone, timezone_identifiers_list(), true)) {
-            throw ValidationException::withMessages(['timezone' => 'Use an IANA timezone identifier.']);
+            throw CalendarError::TimezoneInvalid->validation('timezone');
         }
 
         $instant = ActionInstant::parse($data->dueAt);

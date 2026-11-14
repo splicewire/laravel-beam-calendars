@@ -7,12 +7,12 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Connection;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Carbon;
-use Illuminate\Validation\ValidationException;
 use Splicewire\Beam\Calendars\Data\ActionOccurrenceData;
 use Splicewire\Beam\Calendars\Data\ActionSeriesInputData;
 use Splicewire\Beam\Calendars\Data\CalendarActionData;
 use Splicewire\Beam\Calendars\Data\CalendarActionRecordData;
 use Splicewire\Beam\Calendars\Data\RecurrenceRuleData;
+use Splicewire\Beam\Calendars\Localization\CalendarError;
 use Splicewire\Beam\Calendars\Models\CalendarAction;
 use Splicewire\Beam\Calendars\Models\CalendarActionSeries;
 use Splicewire\Beam\Calendars\Recurrence\SeriesExpander;
@@ -29,7 +29,7 @@ class ActionSeriesService
         return $connection->transaction(function () use ($input, $context, $connection): CalendarActionSeries {
             $this->validateRule($input);
             $handler = $this->handlers->handler($input->action->kind)
-                ?? throw ValidationException::withMessages(['action.kind' => 'No execution handler is available for this action kind.']);
+                ?? throw CalendarError::HandlerUnavailable->validation('action.kind');
             $handler->authorize($input->action, $context, $connection);
             $template = $handler->prepare(clone $input->action, $context, $connection);
             $this->localStart($template);
@@ -93,7 +93,7 @@ class ActionSeriesService
             $this->editable($series, $expectedRevision, $context, $connection);
             $this->assertOccurrence($series, $recurrenceId);
             if ($this->override($series, $recurrenceId) === 'skip') {
-                throw new ActionConflict('This occurrence is skipped. Its exclusion must remain explicit.');
+                throw CalendarError::OccurrenceSkipped->conflict();
             }
 
             return $this->materialize($series, $recurrenceId, $connection);
@@ -115,7 +115,7 @@ class ActionSeriesService
             $existing = $this->record($series, $recurrenceId, $connection);
             if ($existing === null) {
                 $handler = $this->handlers->handler($data->kind)
-                    ?? throw ValidationException::withMessages(['action.kind' => 'No execution handler is available for this action kind.']);
+                    ?? throw CalendarError::HandlerUnavailable->validation('action.kind');
                 $handler->authorize($data, $context, $connection);
                 $prepared = $handler->prepare($data, $context, $connection);
                 $action = $this->actions->schedulePrepared($prepared, $context, $connection);
@@ -237,10 +237,10 @@ class ActionSeriesService
     private function editable(CalendarActionSeries $series, int $expectedRevision, ActionContext $context, Connection $connection, array $statuses = ['active']): void
     {
         $handler = $this->handlers->handler($series->actionData()->kind)
-            ?? throw ValidationException::withMessages(['action.kind' => 'No execution handler is available for this action kind.']);
+            ?? throw CalendarError::HandlerUnavailable->validation('action.kind');
         $handler->authorize($series->actionData(), $context, $connection);
         if ($series->revision !== $expectedRevision || ! in_array($series->status, $statuses, true)) {
-            throw new ActionConflict('The action series changed or is no longer editable. Reload it.');
+            throw CalendarError::SeriesChanged->conflict();
         }
     }
 
@@ -252,7 +252,7 @@ class ActionSeriesService
                 return;
             }
         }
-        throw ValidationException::withMessages(['recurrence_id' => 'This series rule generates no occurrence on that date.']);
+        throw CalendarError::RuleOccurrenceMissing->validation('recurrence_id');
     }
 
     private function setOverride(CalendarActionSeries $series, string $recurrenceId, string $mode, ?string $actionId): void
@@ -266,7 +266,7 @@ class ActionSeriesService
     private function localStart(CalendarActionData $template): CarbonImmutable
     {
         if (! in_array($template->timezone, timezone_identifiers_list(), true)) {
-            throw ValidationException::withMessages(['action.timezone' => 'Use an IANA timezone identifier.']);
+            throw CalendarError::TimezoneInvalid->validation('action.timezone');
         }
 
         return ActionInstant::parse($template->dueAt)->setTimezone($template->timezone);
@@ -311,7 +311,7 @@ class ActionSeriesService
             'rule.byday.*' => ['in:MO,TU,WE,TH,FR,SA,SU', 'distinct'], 'window' => ['nullable', 'date_format:Y-m-d'],
         ])->validate();
         if (isset($rule['count'], $rule['until'])) {
-            throw ValidationException::withMessages(['rule' => 'Choose count or until, not both.']);
+            throw CalendarError::RuleLimitExclusive->validation('rule');
         }
         $this->localStart($input->action);
     }

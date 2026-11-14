@@ -3,8 +3,8 @@
 namespace Splicewire\Beam\Calendars\Render;
 
 use Illuminate\Contracts\Container\Container;
-use Illuminate\Validation\ValidationException;
 use Splicewire\Beam\Calendars\Contracts\CalendarRenderer;
+use Splicewire\Beam\Calendars\Localization\CalendarError;
 use Splicewire\Beam\Calendars\Models\Calendar;
 use Splicewire\Beam\Calendars\Projection\CalendarProjection;
 use Splicewire\Beam\Calendars\Projection\Horizon;
@@ -55,12 +55,9 @@ class CalendarExporter
         if (! is_string($class) || ! class_exists($class)) {
             // A ValidationException rather than a 500: an unsupported format is a bad REQUEST, and
             // the message names what IS available so the caller can correct it in one round trip.
-            throw ValidationException::withMessages([
-                'format' => sprintf(
-                    'Unsupported export format [%s]. Available: %s.',
-                    $format,
-                    implode('|', $this->formats()) ?: '(none registered)',
-                ),
+            throw CalendarError::ExportUnsupported->validation('format', [
+                'format' => $format,
+                'available' => implode('|', $this->formats()) ?: __('beam-calendars::messages.none_registered'),
             ]);
         }
 

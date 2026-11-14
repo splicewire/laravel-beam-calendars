@@ -2,7 +2,7 @@
 
 namespace Splicewire\Beam\Calendars\Write;
 
-use Illuminate\Validation\ValidationException;
+use Splicewire\Beam\Calendars\Localization\CalendarError;
 use Splicewire\Beam\Calendars\Registries\EventKindRegistry;
 
 /**
@@ -34,12 +34,9 @@ class KindValidator
         $class = $this->kinds->tryResolve($kind);
 
         if (! is_string($class) || ! class_exists($class)) {
-            throw ValidationException::withMessages([
-                'kind' => sprintf(
-                    'Unknown calendar event kind [%s]. Registered: %s.',
-                    $kind,
-                    implode(', ', $this->kinds->declaredKeys()) ?: '(none)',
-                ),
+            throw CalendarError::KindUnknown->validation('kind', [
+                'kind' => $kind,
+                'registered' => implode(', ', $this->kinds->declaredKeys()) ?: __('beam-calendars::messages.none'),
             ]);
         }
 

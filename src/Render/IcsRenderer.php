@@ -35,7 +35,7 @@ class IcsRenderer implements CalendarRenderer
             'VERSION:2.0',
             'PRODID:-//Splicewire//Beam Calendar//EN',
             'CALSCALE:GREGORIAN',
-            'X-WR-CALNAME:'.$this->escape((string) ($calendar->title ?? 'Calendar')),
+            'X-WR-CALNAME:'.$this->escape((string) ($calendar->title ?? __('beam-calendars::messages.export_calendar'))),
         ];
 
         $stamp = gmdate('Ymd\THis\Z');
@@ -92,7 +92,7 @@ class IcsRenderer implements CalendarRenderer
     {
         // A kind with no title is not an error — see CalendarProjection::fromRow(). Name the kind
         // rather than inventing a label this package has no way to know.
-        return trim((string) preg_replace('/^kind\./', '', (string) ($event->kind ?? 'Event'))) ?: 'Event';
+        return trim((string) preg_replace('/^kind\./', '', (string) ($event->kind ?? __('beam-calendars::messages.export_event')))) ?: __('beam-calendars::messages.export_event');
     }
 
     private function date(string $value): ?DateTimeImmutable

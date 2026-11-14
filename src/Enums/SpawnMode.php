@@ -23,8 +23,8 @@ enum SpawnMode: string implements ProvidesEnumLabel
     public function label(): string
     {
         return match ($this) {
-            self::Generate => 'Generate a new item',
-            self::Reference => 'Reference a fixed item',
+            self::Generate => __('beam-calendars::messages.generate'),
+            self::Reference => __('beam-calendars::messages.reference'),
         };
     }
 }

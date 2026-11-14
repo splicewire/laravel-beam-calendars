@@ -4,7 +4,7 @@ namespace Splicewire\Beam\Calendars\Actions;
 
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
-use Illuminate\Validation\ValidationException;
+use Splicewire\Beam\Calendars\Localization\CalendarError;
 
 /** One local-calendar-day policy for recurring and relative actions. */
 class ActionLocalTime
@@ -20,7 +20,7 @@ class ActionLocalTime
     public static function atDate(CarbonInterface $instant, string $date, string $timezone): CarbonImmutable
     {
         if (! in_array($timezone, timezone_identifiers_list(), true)) {
-            throw ValidationException::withMessages(['timezone' => 'Use an IANA timezone identifier.']);
+            throw CalendarError::TimezoneInvalid->validation('timezone');
         }
         validator(['date' => $date], ['date' => ['required', 'date_format:Y-m-d']])->validate();
         $start = CarbonImmutable::instance($instant)->setTimezone($timezone);

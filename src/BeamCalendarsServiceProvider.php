@@ -129,6 +129,9 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
     public function packageBooted(): void
     {
         $this->registerMessagePresentation();
+        $this->callAfterResolving(\Illuminate\Contracts\Debug\ExceptionHandler::class, function ($handler): void {
+            $handler->renderable(Localization\CalendarErrorResponses::render(...));
+        });
 
         // Informational calendar models use cascade policy attributes. Executable action models
         // use the separate host-context policies registered below.

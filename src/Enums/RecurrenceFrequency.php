@@ -23,10 +23,10 @@ enum RecurrenceFrequency: string implements ProvidesEnumLabel
     public function label(): string
     {
         return match ($this) {
-            self::Daily => 'Daily',
-            self::Weekly => 'Weekly',
-            self::Monthly => 'Monthly',
-            self::Yearly => 'Yearly',
+            self::Daily => __('beam-calendars::messages.daily'),
+            self::Weekly => __('beam-calendars::messages.weekly'),
+            self::Monthly => __('beam-calendars::messages.monthly'),
+            self::Yearly => __('beam-calendars::messages.yearly'),
         };
     }
 }

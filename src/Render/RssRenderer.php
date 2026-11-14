@@ -31,8 +31,8 @@ class RssRenderer implements CalendarRenderer
             '<?xml version="1.0" encoding="UTF-8"?>',
             '<rss version="2.0">',
             '  <channel>',
-            '    <title>'.$this->escape((string) ($calendar->title ?? 'Calendar')).'</title>',
-            '    <description>'.$this->escape((string) ($calendar->title ?? 'Calendar')).'</description>',
+            '    <title>'.$this->escape((string) ($calendar->title ?? __('beam-calendars::messages.export_calendar'))).'</title>',
+            '    <description>'.$this->escape((string) ($calendar->title ?? __('beam-calendars::messages.export_calendar'))).'</description>',
             '    <lastBuildDate>'.gmdate('D, d M Y H:i:s \G\M\T').'</lastBuildDate>',
         ];
 
