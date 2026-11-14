@@ -21,8 +21,10 @@ use Splicewire\Beam\Calendars\Registries\ActionHandlerRegistry;
 use Splicewire\Beam\Calendars\Registries\ChannelRegistry;
 use Splicewire\Beam\Calendars\Registries\EventKindRegistry;
 use Splicewire\Beam\Calendars\Registries\RendererRegistry;
+use Splicewire\Beam\Data\MessageReferenceData;
 use Splicewire\Beam\Doctor\BeamDoctorManifest;
 use Splicewire\Beam\Install\BeamInstallManifest;
+use Splicewire\Beam\Localization\Presentation\MessagePresenters;
 use Splicewire\Beam\Nav\NavAudience;
 use Splicewire\Beam\Nav\NavSection;
 use Splicewire\Beam\Nav\NavSectionRegistry;
@@ -101,8 +103,33 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
         });
     }
 
+    /**
+     * localization 37 (SCOUT-37 ruling 3): the one calendars blocker sentence an existing identity proves. A series is
+     * set `blocked` only by ActionSeriesService's materialization guard, with exactly this sentence. Attempt blockers
+     * stay literal: `failed`/`blocked` are also returned by the open set of third-party handlers.
+     */
+    private function registerMessagePresentation(): void
+    {
+        $this->callAfterResolving(MessagePresenters::class, static function (MessagePresenters $presenters): void {
+            $presenters->adapter('beam-calendars::series.materialization_blocked');
+            // Only a SERIES row's `blocked` status proves the sentence: the subject must resolve to the series model
+            // (a foreign or subjectless row with the same status is never rewritten).
+            $presenters->identity('calendar-series', static function (array $row): ?MessageReferenceData {
+                $type = $row['subject_type'] ?? null;
+                $class = is_string($type) && $type !== '' ? (Relation::getMorphedModel($type) ?? $type) : null;
+                if (! is_string($class) || ! class_exists($class) || ! is_a($class, CalendarActionSeries::class, true) || ($row['status'] ?? null) !== 'blocked') {
+                    return null;
+                }
+
+                return MessageReferenceData::of('beam-calendars::series.materialization_blocked', 'Occurrence materialization is unavailable or no longer authorized. Restore the handler or authority, then resume this series.');
+            });
+        });
+    }
+
     public function packageBooted(): void
     {
+        $this->registerMessagePresentation();
+
         // Informational calendar models use cascade policy attributes. Executable action models
         // use the separate host-context policies registered below.
         CascadePolicyRegistrar::register(Calendar::class);
