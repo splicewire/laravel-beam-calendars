@@ -3,8 +3,10 @@
 namespace Splicewire\Beam\Calendars\Data;
 
 use Spatie\LaravelData\Attributes\MapName;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
 
+#[TypeScript]
 class ActionOccurrenceOverrideData extends BeamData
 {
     public function __construct(

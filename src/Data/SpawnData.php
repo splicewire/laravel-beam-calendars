@@ -6,6 +6,7 @@ use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Title;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Optional;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Calendars\Enums\SpawnMode;
 use Splicewire\Beam\Data\BeamData;
 
@@ -36,6 +37,7 @@ use Splicewire\Beam\Data\BeamData;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
+#[TypeScript]
 class SpawnData extends BeamData
 {
     public function __construct(

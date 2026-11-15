@@ -5,6 +5,7 @@ namespace Splicewire\Beam\Calendars\Data;
 use Schemastud\DataSchemas\Attributes\Description;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Optional;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
 
 /**
@@ -19,6 +20,7 @@ use Splicewire\Beam\Data\BeamData;
  * ⚠️ The wire keys are DECLARED below — see {@see CalendarSeriesInputData} for why this package
  * never leaves them to the host's global mapper, and `WireNameTest` for the assertion.
  */
+#[TypeScript]
 class MaterializeInputData extends BeamData
 {
     public function __construct(

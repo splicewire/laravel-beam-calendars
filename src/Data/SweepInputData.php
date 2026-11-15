@@ -4,6 +4,7 @@ namespace Splicewire\Beam\Calendars\Data;
 
 use Schemastud\DataSchemas\Attributes\Description;
 use Spatie\LaravelData\Optional;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
 
 /**
@@ -17,6 +18,7 @@ use Splicewire\Beam\Data\BeamData;
  * Single-word key, so nothing to map — the camel/snake hazard {@see CalendarSeriesInputData}
  * documents cannot bite a name with no word boundary in it.
  */
+#[TypeScript]
 class SweepInputData extends BeamData
 {
     public function __construct(

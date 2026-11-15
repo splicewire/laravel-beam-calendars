@@ -6,8 +6,10 @@ use Schemastud\DataSchemas\Attributes\Description;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\Validation\DateFormat;
 use Spatie\LaravelData\Attributes\Validation\Min;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
 
+#[TypeScript]
 class ActionOccurrenceInputData extends BeamData
 {
     public function __construct(

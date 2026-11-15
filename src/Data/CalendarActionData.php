@@ -4,9 +4,11 @@ namespace Splicewire\Beam\Calendars\Data;
 
 use Schemastud\DataSchemas\Attributes\Description;
 use Spatie\LaravelData\Attributes\MapName;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
 
 /** A complete action replacement. Its handler declares and validates the nested payload shape. */
+#[TypeScript]
 class CalendarActionData extends BeamData
 {
     /** @param array<string, mixed> $payload */

@@ -3,9 +3,11 @@
 namespace Splicewire\Beam\Calendars\Data;
 
 use Spatie\LaravelData\Attributes\MapName;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Calendars\Models\CalendarActionAttempt;
 use Splicewire\Beam\Data\BeamData;
 
+#[TypeScript]
 class CalendarActionAttemptData extends BeamData
 {
     /**

@@ -3,8 +3,10 @@
 namespace Splicewire\Beam\Calendars\Data;
 
 use Schemastud\DataSchemas\Attributes\Description;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
 
+#[TypeScript]
 class ActionSeriesInputData extends BeamData
 {
     public function __construct(

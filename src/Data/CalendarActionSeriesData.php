@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Rushing\DataFilters\Attributes\Filterable;
 use Rushing\DataFilters\Operators\Exact;
 use Spatie\LaravelData\Attributes\MapName;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Calendars\Contracts\ActionContextProvider;
 use Splicewire\Beam\Calendars\Models\CalendarActionSeries;
 use Splicewire\Beam\Data\BeamData;
@@ -23,6 +24,7 @@ use Splicewire\Beam\Particle\Attributes\ParticleResource;
     editable: false,
     deletable: false,
 )]
+#[TypeScript]
 class CalendarActionSeriesData extends BeamData
 {
     /**

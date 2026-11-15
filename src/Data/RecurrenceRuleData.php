@@ -6,6 +6,7 @@ use Schemastud\DataSchemas\Attributes\ArrayItems;
 use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Title;
 use Spatie\LaravelData\Optional;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Calendars\Enums\RecurrenceFrequency;
 use Splicewire\Beam\Data\BeamData;
 
@@ -49,6 +50,7 @@ use Splicewire\Beam\Data\BeamData;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
+#[TypeScript]
 class RecurrenceRuleData extends BeamData
 {
     /**
