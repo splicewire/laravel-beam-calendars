@@ -4,6 +4,7 @@ namespace Splicewire\Beam\Calendars\Data;
 
 use Schemastud\DataSchemas\Attributes\Description;
 use Spatie\LaravelData\Optional;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Calendars\Projection\Horizon;
 use Splicewire\Beam\Data\BeamData;
 
@@ -21,6 +22,7 @@ use Splicewire\Beam\Data\BeamData;
  * `calendarId` — read one key, write another, with nothing reporting it. `WireNameTest` now
  * asserts the published keys directly.
  */
+#[TypeScript]
 class HorizonInputData extends BeamData
 {
     public function __construct(
