@@ -42,7 +42,8 @@ class Resources
      * `discover_paths` points at the HOST's `app_path('Data')`, which a package class can never be
      * inside, so a package must declare its own classes explicitly.
      *
-     * Idempotent — registration is keyed, so declaring twice registers the same three.
+     * Registration is keyed: declaring again replaces existing entries and records supersessions.
+     * CalendarsRoutes::mount() preserves existing declarations and discovers only missing resources.
      */
     public static function declare(): void
     {

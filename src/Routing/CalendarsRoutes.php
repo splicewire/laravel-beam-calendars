@@ -5,8 +5,13 @@ namespace Splicewire\Beam\Calendars\Routing;
 use Illuminate\Routing\Router;
 use Splicewire\Beam\Calendars\ActionResources;
 use Splicewire\Beam\Calendars\ActionSeriesResources;
+use Splicewire\Beam\Calendars\Data\CalendarData;
+use Splicewire\Beam\Calendars\Data\CalendarEventData;
+use Splicewire\Beam\Calendars\Data\CalendarSeriesData;
 use Splicewire\Beam\Calendars\Resources;
+use Splicewire\Beam\Particle\Attributes\AttributedParticleDiscovery;
 use Splicewire\Beam\Particle\ParticleOperationRegistry;
+use Splicewire\Beam\Particle\ParticleResourceRegistry;
 use Splicewire\Beam\Routing\ApiRoot;
 
 /**
@@ -20,10 +25,25 @@ final class CalendarsRoutes
     /** Calendars, events, series and the calendar ops: what `Resources::register()` mounts today. */
     public static function mount(array $opts = []): void
     {
-        Resources::declare();
-
         if (! class_exists(ParticleOperationRegistry::class)) {
             return; // beam particle infra genuinely absent (a headless install), as Resources::register().
+        }
+
+        $registry = app(ParticleResourceRegistry::class);
+        foreach ([
+            'calendars' => CalendarData::class,
+            'calendar-events' => CalendarEventData::class,
+            'calendar-series' => CalendarSeriesData::class,
+        ] as $key => $data) {
+            if (! $registry->has($key)) {
+                app(AttributedParticleDiscovery::class)->discover([$data]);
+            }
+        }
+        if (! $registry->has('calendar-actions')) {
+            ActionResources::declare();
+        }
+        if (! $registry->has('calendar-action-series')) {
+            ActionSeriesResources::declare();
         }
 
         $idConstraint = $opts['idConstraint'] ?? 'uuid';
