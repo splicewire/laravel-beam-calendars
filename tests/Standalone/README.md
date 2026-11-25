@@ -8,7 +8,7 @@ Install development dependencies for the sibling `splicewire/laravel-beam-workfl
 including its optional local calendars dependency. From `splicewire/laravel-beam-calendars`:
 
 ```sh
-XDEBUG_MODE=off herd php -S 127.0.0.1:8767 tests/Browser/standalone-router.php
+XDEBUG_MODE=off herd php -S 127.0.0.1:8767 tests/Standalone/standalone-router.php
 ```
 
 Override `BEAM_WORKFLOWS_FIXTURE_ROOT` if the workflow checkout is not a sibling. Override
@@ -38,7 +38,7 @@ revision conflicts, trusted context, pins and local transaction/receipt behavior
 For a CLI due sweep using the real current time:
 
 ```sh
-XDEBUG_MODE=off herd php tests/Browser/standalone-router.php tick
+XDEBUG_MODE=off herd php tests/Standalone/standalone-router.php tick
 ```
 
 The file-backed standalone process proof exercises the same fixture in separate PHP processes. It
@@ -46,7 +46,7 @@ kills a worker at the pre-commit barrier, verifies the action remains pending, r
 invokes the same action again to prove duplicate execution leaves one applied attempt:
 
 ```sh
-XDEBUG_MODE=off herd php tests/Browser/standalone-process-proof.php
+XDEBUG_MODE=off herd php tests/Standalone/standalone-process-proof.php
 ```
 
 The proof deliberately uses SQLite for the standalone fixture. It establishes crash recovery and
