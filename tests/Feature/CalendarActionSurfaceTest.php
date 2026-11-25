@@ -8,9 +8,13 @@ use Splicewire\Beam\Calendars\Actions\ActionService;
 use Splicewire\Beam\Calendars\Contracts\ActionContextProvider;
 use Splicewire\Beam\Calendars\Data\CalendarActionData;
 use Splicewire\Beam\Calendars\Tests\Fakes\LocalActionHandler;
+use Splicewire\Beam\Calendars\Tests\Fixtures\User;
 
 beforeEach(function () {
     app()->register(Schemastud\DataSchemas\LaravelDataSchemasServiceProvider::class);
+    // A signed-in reader, as on a host: beam refuses a guest any resource without a declared Public Read
+    // (ADR-0230), and calendar actions are one actor's, not public. Unsaved, so no users row is written.
+    $this->actingAs(new User(['id' => 1]));
     config(['beam.calendars.action-handlers' => ['kind.local' => LocalActionHandler::class]]);
     $this->contextProvider = new class implements ActionContextProvider
     {
