@@ -7,6 +7,10 @@ use Splicewire\Beam\Calendars\ActionResources;
 use Splicewire\Beam\Calendars\ActionSeriesResources;
 use Splicewire\Beam\Calendars\Resources;
 use Splicewire\Beam\Calendars\Routing\CalendarsRoutes;
+use Splicewire\Beam\Facades\Particle;
+use Splicewire\Beam\Particle\OperationKind;
+use Splicewire\Beam\Particle\ParticleOperation;
+use Splicewire\Beam\Particle\ParticleOperationRegistry;
 
 // owner-review-20261112 13d (ADR-0243): the package mounts at its own root, beam/calendars, beside the mount the host
 // makes today. The host's group is the boundary; legacy routes keep their URIs and names until ticket 16.
@@ -114,3 +118,54 @@ it('moves only the package root when the host overrides it', function () use ($m
     expect($match('/custom/cal/calendars')->getActionName())->toBe($match('/resources/calendars')->getActionName())
         ->and($uris())->not->toContain('beam/calendars/calendars');
 });
+
+// owner-review-20261112 61: a host's own verbs on these resources (on the flagship, tower's circuit-action outcome and
+// retry-handoff and its calendar lens) mount at the package root by name, beside the package's own ops, so every
+// legacy route the host makes has a twin there.
+$hostOp = fn (string $resource, string $name) => app(ParticleOperationRegistry::class)->register(new ParticleOperation(
+    resource: $resource,
+    name: $name,
+    kind: OperationKind::Read,
+    handle: fn () => null,
+));
+
+it('mounts host-contributed ops by name at the package root, beside the legacy mount', function () use ($hostOp) {
+    $hostOp('calendars', 'host-lens');
+    $hostOp('calendar-actions', 'host-outcome');
+    Route::prefix('resources')->group(fn () => Particle::ops('calendars', 'calendars', ['host-lens']));
+    Route::prefix('api/beam')->group(fn () => Particle::ops('calendar-actions', 'calendar-actions', ['host-outcome']));
+
+    Route::domain('workspace.example')->middleware('auth')->group(function () {
+        CalendarsRoutes::mount(['ops' => ['host-lens']]);
+        CalendarsRoutes::mountActions(ops: ['host-outcome']);
+    });
+
+    $ops = fn (string $root) => array_filter(routeTable($root), fn (string $key) => str_contains($key, 'host-'), ARRAY_FILTER_USE_KEY);
+    expect($ops('beam/calendars/'))->toEqual([...$ops('resources/'), ...$ops('api/beam/')])
+        ->and($ops('beam/calendars/'))->toHaveCount(2);
+
+    $routes = app(Router::class)->getRoutes();
+    $routes->refreshNameLookups(); // a mount names its routes after adding them, as the framework's boot refreshes
+    foreach (['beam.calendars.calendars.host-lens', 'beam.calendars.calendar-actions.host-outcome'] as $name) {
+        $route = $routes->getByName($name);
+        expect($route)->not->toBeNull($name)
+            ->and($route->uri())->toStartWith('beam/calendars/')
+            ->and($route->getDomain())->toBe('workspace.example')
+            ->and($route->gatherMiddleware())->toContain('auth');
+    }
+});
+
+it('mounts no host op unless the host names it', function () use ($hostOp) {
+    $hostOp('calendars', 'host-lens');
+    $hostOp('calendar-actions', 'host-outcome');
+
+    CalendarsRoutes::mount();
+    CalendarsRoutes::mountActions();
+
+    expect(array_filter(routeTable('beam/calendars/'), fn (string $key) => str_contains($key, 'host-'), ARRAY_FILTER_USE_KEY))
+        ->toBeEmpty();
+});
+
+it('fails at mount for a host op name nothing registered', function () {
+    CalendarsRoutes::mountActions(ops: ['no-such-op']);
+})->throws(InvalidArgumentException::class, 'No particle operation [no-such-op] on resource [calendar-actions]');
