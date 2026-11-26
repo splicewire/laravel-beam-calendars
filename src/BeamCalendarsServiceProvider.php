@@ -11,6 +11,7 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Splicewire\Beam\Calendars\Actions\ActionPolicy;
 use Splicewire\Beam\Calendars\Actions\ActionSeriesPolicy;
 use Splicewire\Beam\Calendars\Actions\ActionService;
+use Splicewire\Beam\Calendars\Config\BeamCalendarsSection;
 use Splicewire\Beam\Calendars\Contracts\ChannelSource;
 use Splicewire\Beam\Calendars\Models\Calendar;
 use Splicewire\Beam\Calendars\Models\CalendarAction;
@@ -21,6 +22,7 @@ use Splicewire\Beam\Calendars\Registries\ActionHandlerRegistry;
 use Splicewire\Beam\Calendars\Registries\ChannelRegistry;
 use Splicewire\Beam\Calendars\Registries\EventKindRegistry;
 use Splicewire\Beam\Calendars\Registries\RendererRegistry;
+use Splicewire\Beam\Config\ConfigSectionRegistry;
 use Splicewire\Beam\Data\MessageReferenceData;
 use Splicewire\Beam\Doctor\BeamDoctorManifest;
 use Splicewire\Beam\Install\BeamInstallManifest;
@@ -215,6 +217,20 @@ class BeamCalendarsServiceProvider extends PackageServiceProvider
         Relation::morphMap(['calendar_action_series' => CalendarActionSeries::class], true);
         Gate::policy(CalendarAction::class, ActionPolicy::class);
         Relation::morphMap(['calendar_action' => CalendarAction::class], true);
+
+        // ADR-0245: register the declared shape of config/beam/calendars.php so the host config census
+        // attributes every key of this root to the owned section (source `registry`) instead of reporting
+        // the root undeclared. Registration only — the shape lives in {@see BeamCalendarsSection}, and the
+        // four host-extensible registry maps (action-handlers, event-kinds, renderers, channels) are the
+        // #[MapValues] keys tower and hosts append into. `callAfterResolving` so a host that never resolves
+        // the registry (no census, no doctor) still boots without paying for it.
+        $this->callAfterResolving(ConfigSectionRegistry::class, static function (ConfigSectionRegistry $sections): void {
+            $sections->section(
+                BeamCalendarsSection::class,
+                owner: 'splicewire/laravel-beam-calendars',
+                packageFile: dirname(__DIR__).'/config/beam/calendars.php',
+            );
+        });
 
         $this->registerNavSection();
     }
