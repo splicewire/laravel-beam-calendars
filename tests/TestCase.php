@@ -8,6 +8,7 @@ use Orchestra\Testbench\TestCase as Orchestra;
 use Rushing\DataFilters\ServiceProvider as DataFiltersServiceProvider;
 use Rushing\PermissionCascade\PermissionCascadeServiceProvider;
 use Rushing\Popcorn\Laravel\PopcornServiceProvider;
+use Schemastud\DataSchemas\LaravelDataSchemasServiceProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
 use Spatie\LaravelData\Mappers\CamelCaseMapper;
 use Spatie\Permission\PermissionServiceProvider;
@@ -38,6 +39,13 @@ abstract class TestCase extends Orchestra
             // NULL inside the suite — every hydration then fatals with an array-offset-on-null
             // before any assertion can run. A FATAL, not a failure, which is why it is worth naming.
             LaravelDataServiceProvider::class,
+
+            // Config Section schema services (ADR-0245): ConfigSectionSchema/Coverage/Declarations and
+            // the AcceptanceGate the `beam.calendars` section test resolves live against
+            // schemastud/laravel-data-schemas. beam already depends on it; booting it here is inert for
+            // every pre-existing test (they never touch the gate) and is what lets the section test
+            // resolve `AcceptanceGate` instead of fataling on an unbound abstract.
+            LaravelDataSchemasServiceProvider::class,
 
             // ⚠️ The FIFTH instance of the trap tower's TestCase documents four times: testbench does
             // not auto-discover. Without beam's own provider, ParticleResourceRegistry is not bound as
